@@ -11,16 +11,21 @@ MODELS := bottom cover lid
 
 SCAD_FILES := $(sort $(patsubst %, $(OUTPUT_DIR)/%.scad, $(MODELS)) $(wildcard $(OUTPUT_DIR)/*.scad))
 STL_FILES  := $(patsubst $(OUTPUT_DIR)/%.scad, $(OUTPUT_DIR)/%.stl, $(SCAD_FILES))
+3MF_FILES  := $(patsubst $(OUTPUT_DIR)/%.scad, $(OUTPUT_DIR)/%.3mf, $(SCAD_FILES))
 
 all: scad
 scad: $(SCAD_FILES)
 stl: $(STL_FILES)
+3mf: $(3MF_FILES)
 
 $(SCAD_FILES) &: $(PYTHON_SRCS)
 	uv run python main.py
 
 # Generic rule for scad -> stl
 %.stl: %.scad
+	openscad -o $@ $<
+
+%.3mf: %.scad
 	openscad -o $@ $<
 
 # Format Python files with Ruff
