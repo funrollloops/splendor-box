@@ -28,7 +28,32 @@ def tokens(h):
         for x in range(3)
         for y in range(2)
     ]
-    return s.translate([r, r, 0])(s.union()(*l))
+
+    cutout_ratio = 0.7
+    # Unused rectangle cutout; disc used instead cause it's cool.
+    rectangle_cutout = s.translate(
+        [
+            d.TOKEN_DIAMETER * (1 - cutout_ratio),
+            d.TOKEN_DIAMETER * (1 - cutout_ratio),
+            0,
+        ]
+    )(
+        s.cube(
+            d.TOKEN_DIAMETER * 2 * cutout_ratio + d.TOKEN_DIAMETER,
+            d.TOKEN_DIAMETER * 2 * cutout_ratio,
+            d.GEM_STACK_H + FUDGE,
+            center=False,
+        )
+    )
+    disc_cutouts = s.union()(
+        *(
+            s.translate(x * d.TOKEN_DIAMETER, d.TOKEN_DIAMETER, 0)(
+                s.cylinder(r=d.TOKEN_RADIUS * cutout_ratio, h=h + FUDGE)
+            )
+            for x in range(0, 3)
+        )
+    )
+    return s.union()(s.translate([r, r, 0])(s.union()(*l)), disc_cutouts)
 
 
 def card_stack(h):
@@ -42,11 +67,28 @@ def rounded_box_except_top(w, l, h, r):
     """Create a rounded box with the given width, length, height, and corner radius at (0, 0)."""
     corner = s.union()(s.sphere(r=r), s.cylinder(r=r, h=h - r))
     return s.hull()(
-        s.translate([r, r, 0])(corner),
-        s.translate([w - r, r, 0])(corner),
-        s.translate([w - r, l - r, 0])(corner),
-        s.translate([r, l - r, 0])(corner),
+        s.translate([r, r, r])(corner),
+        s.translate([w - r, r, r])(corner),
+        s.translate([w - r, l - r, r])(corner),
+        s.translate([r, l - r, r])(corner),
     )
+
+
+def rounded_box(w, l, h, r):
+    """Create a rounded box with the given width, length, height, and corner radius at (0, 0)."""
+    corner = s.union()(
+        s.sphere(r=r), s.translate(0, 0, h - 2 * r)(s.sphere(r=r))
+    )
+    return s.hull()(
+        s.translate([r, r, r])(corner),
+        s.translate([w - r, r, r])(corner),
+        s.translate([w - r, l - r, r])(corner),
+        s.translate([r, l - r, r])(corner),
+    )
+
+
+def scoop(thickness, r):
+    return s.rotate(-90, 0, 0)(s.cylinder(r=r, h=thickness + FUDGE))
 
 
 def bottom(wall_thickness=1.5):
@@ -73,27 +115,13 @@ def bottom(wall_thickness=1.5):
         )
     )
 
-    cutout_ratio = 0.7
-    token_cutout = s.translate(
-        [
-            d.TOKEN_DIAMETER * (1 - cutout_ratio),
-            d.TOKEN_DIAMETER * (1 - cutout_ratio),
-            0,
-        ]
-    )(
-        s.cube(
-            d.TOKEN_DIAMETER * 2 * cutout_ratio + d.TOKEN_DIAMETER,
-            d.TOKEN_DIAMETER * 2 * cutout_ratio,
-            d.GEM_STACK_H + FUDGE,
-            center=False,
-        )
-    )
-
     nobles = rounded_rectangle(
         d.NOBLE_WIDTH, d.NOBLE_LENGTH, d.NOBLE_STACK_H + FUDGE, CARD_RADIUS
     )
 
     gem_y_offset = (d.CARD_LENGTH - d.TOKEN_DIAMETER * 2) / 2
+    noble_x_offset = (d.CARD_WIDTH - d.NOBLE_WIDTH) / 2
+    noble_y_offset = (d.CARD_LENGTH - d.NOBLE_LENGTH) / 2
 
     tier1_slot_height = b_inner_height - d.NOBLE_STACK_H
     assert tier1_slot_height >= d.TIER1_STACK_H
@@ -101,19 +129,56 @@ def bottom(wall_thickness=1.5):
     assert tier2_slot_height >= d.TIER2_STACK_H
     assert tier2_slot_height >= d.TIER3_STACK_H
 
-    return s.difference()(
-        b_outer,
-        s.translate([(d.CARD_WIDTH - d.NOBLE_LENGTH) / 2, (d.CARD_LENGTH - d.NOBLE_LENGTH) / 2, 0])(nobles),
-        s.translate([d.CARD_WIDTH, gem_y_offset, 0])(
-            tokens(d.GEM_STACK_H), token_cutout
+    card_scoops = [
+        s.translate([card_spacing * i + d.CARD_WIDTH / 2, y, b_inner_height])(
+            scoop(
+                WT + 2 * FUDGE,
+                (tier2_slot_height if i else tier1_slot_height) + 3,
+            )
+        )
+        for i in range(3)
+        for y in (-WT - FUDGE, b_inner_length - FUDGE)
+    ]
+
+    # Noble scoops, not used because gem scoops work for nobles too!
+    noble_scoops = [
+        s.translate(d.CARD_WIDTH / 2, noble_y_offset, d.NOBLE_STACK_H)(
+            s.scale(d.NOBLE_STACK_H, noble_y_offset - WT, d.NOBLE_STACK_H)(
+                s.sphere()
+            )
         ),
+        s.translate(
+            d.CARD_WIDTH / 2, noble_y_offset + d.NOBLE_LENGTH, d.NOBLE_STACK_H
+        )(
+            s.scale(d.NOBLE_STACK_H, noble_y_offset - WT, d.NOBLE_STACK_H)(
+                s.sphere()
+            )
+        ),
+    ]
+
+    return s.difference()(
+        s.union()(b_outer),
+        # Nobles, centered under the tier 1 card stack.
+        s.translate(
+            [
+                noble_x_offset,
+                noble_y_offset,
+                0,
+            ]
+        )(nobles),
+        # Scoops for the nobles, centered under the tier 1 card stack.
+        # Gems, centered under the tier 2 and 3 card stacks.
+        s.translate([d.CARD_WIDTH, gem_y_offset, 0])(tokens(d.GEM_STACK_H)),
+        # Card slots.
         s.translate([0, 0, d.NOBLE_STACK_H])(card_stack(tier1_slot_height)),
-        s.translate([card_spacing, 0, d.GEM_STACK_H])(card_stack(tier2_slot_height)),
+        s.translate([card_spacing, 0, d.GEM_STACK_H])(
+            card_stack(tier2_slot_height)
+        ),
         s.translate([card_spacing * 2, 0, d.GEM_STACK_H])(
             card_stack(tier2_slot_height)
         ),
-        # Cutout for card dividers. Should leave gem stacks unobstructed without cutting into
-        # rounded corners of the box.
+        *card_scoops,
+        # Cutout for card dividers so gem stacks are not obstructed.
         s.translate([CARD_RADIUS, gem_y_offset, d.GEM_STACK_H])(
             s.cube(
                 b_inner_width - 2 * CARD_RADIUS,
