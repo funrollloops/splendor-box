@@ -3,7 +3,7 @@ import solid2 as s
 import dimensions as d
 
 CARD_RADIUS = d.CARD_CORNER_RADIUS
-FUDGE = 0.01  # Avoid co-planar surfaces
+FUDGE = 0.1  # Avoid co-planar surfaces (must exceed OpenSCAD facet chord sagitta ~0.036mm)
 WALL_THICKNESS = 2  # Thickness of the box walls
 B_INNER_WIDTH = max(d.CARD_WIDTH, d.NOBLE_WIDTH) + max(
     d.CARD_WIDTH * 2, d.TOKEN_DIAMETER * 3
