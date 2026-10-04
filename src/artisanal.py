@@ -18,6 +18,7 @@ B_INNER_HEIGHT = max(
     d.TIER1_STACK_H + d.NOBLE_STACK_H, d.GEM_STACK_H + d.TIER2_STACK_H
 )
 B_OUTER_HEIGHT = B_INNER_HEIGHT + WALL_THICKNESS
+BOX_RADIUS = WALL_THICKNESS # CARD_RADIUS
 
 
 def rounded_rectangle(w, l, h, r):
@@ -110,11 +111,11 @@ def bottom():
     card_spacing = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
 
     b_outer = s.translate([-WT, -WT, -WT])(
-        rounded_box_except_top(
+        rounded_box(
             B_OUTER_WIDTH,
             B_OUTER_LENGTH,
             B_OUTER_HEIGHT - FUDGE,
-            CARD_RADIUS,
+            BOX_RADIUS,
         )
     )
 
@@ -182,9 +183,9 @@ def bottom():
         ),
         *card_scoops,
         # Cutout for card dividers so gem stacks are not obstructed.
-        s.translate([CARD_RADIUS, gem_y_offset, d.GEM_STACK_H])(
+        s.translate([BOX_RADIUS, gem_y_offset, d.GEM_STACK_H])(
             s.cube(
-                B_INNER_WIDTH - 2 * CARD_RADIUS,
+                B_INNER_WIDTH - 2 * BOX_RADIUS,
                 B_INNER_LENGTH - 2 * gem_y_offset,
                 tier2_slot_height,
                 center=False,
@@ -192,7 +193,7 @@ def bottom():
         ),
     )
 
-def lid():
+def cover():
     """The top of the box, with a lip to hold the lid in place."""
     WT = WALL_THICKNESS
     return s.difference()(
@@ -201,8 +202,14 @@ def lid():
                 B_OUTER_WIDTH + 2 * WT,
                 B_OUTER_LENGTH + 2 * WT,
                 B_OUTER_HEIGHT + WT,
-                CARD_RADIUS,
+                BOX_RADIUS,
             )
         ),
-        s.cube(B_OUTER_WIDTH, B_OUTER_LENGTH, B_OUTER_HEIGHT + FUDGE)
+        rounded_box_except_top(B_OUTER_WIDTH, B_OUTER_LENGTH, B_OUTER_HEIGHT + FUDGE, BOX_RADIUS)
     )
+
+
+def lid():
+  """Rather than a full-height cover, this is a shallow lid that
+  locks into the box with tabs."""
+  pass
