@@ -67,6 +67,10 @@ class TestSplendorBox(unittest.TestCase):
         self.assertIsNotNone(assembly)
 
     def test_artisanal_generation(self):
-        """Verify artisanal box bottom object generation."""
+        """Verify artisanal box bottom, lid, and cover object generation."""
         bottom = art.bottom()
+        lid = art.lid()
+        cover = art.cover()
         self.assertIsNotNone(bottom)
+        self.assertIsNotNone(lid)
+        self.assertIsNotNone(cover)

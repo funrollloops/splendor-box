@@ -45,6 +45,8 @@ def main():
         # 4. Artisanal Box Models
         "artisanal_bottom": art.bottom(),
         "artisanal_lid": art.lid(),
+        "artisanal_cover": art.cover(),
+        "artisanal_assembly": art.assembly(),
     }
 
     for name, obj in models.items():

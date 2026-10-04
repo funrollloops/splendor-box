@@ -18,11 +18,23 @@ B_INNER_HEIGHT = max(
     d.TIER1_STACK_H + d.NOBLE_STACK_H, d.GEM_STACK_H + d.TIER2_STACK_H
 )
 B_OUTER_HEIGHT = B_INNER_HEIGHT + WALL_THICKNESS
-BOX_RADIUS = WALL_THICKNESS # CARD_RADIUS
+BOX_RADIUS = WALL_THICKNESS  # CARD_RADIUS
+
+LEFT_VERTICAL_CLEARANCE = B_INNER_HEIGHT - d.NOBLE_STACK_H - d.TIER1_STACK_H
+RIGHT_VERTICAL_CLEARANCE = B_INNER_HEIGHT - d.GEM_STACK_H - d.TIER2_STACK_H
+
+RETENTION_TAB_WIDTH = B_INNER_LENGTH / 3.0
+RETENTION_TAB_HEIGHT = 2.0
+RETENTION_TAB_DEPTH = 0.7
+RETENTION_TAB_OFFSET_FROM_TOP = 3.0  # To center
+
+assert LEFT_VERTICAL_CLEARANCE >= RETENTION_TAB_HEIGHT/2 + RETENTION_TAB_OFFSET_FROM_TOP, f"Left vertical clearance ({LEFT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
+assert RIGHT_VERTICAL_CLEARANCE >= RETENTION_TAB_HEIGHT/2 + RETENTION_TAB_OFFSET_FROM_TOP, f"Right vertical clearance ({RIGHT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
 
 
 def rounded_rectangle(w, l, h, r):
     """Create a rounded rectangle with the given width, length, a height of 1, and corner radius at (0, 0)."""
+    assert min(w, h, l) > 2 * r, f"Dimensions too small for corner radius: w={w}, l={l}, h={h}, r={r}"
     return s.hull()(
         s.translate([r, r, 0])(s.cylinder(r=r, h=h)),
         s.translate([w - r, r, 0])(s.cylinder(r=r, h=h)),
@@ -111,7 +123,7 @@ def bottom():
     card_spacing = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
 
     b_outer = s.translate([-WT, -WT, -WT])(
-        rounded_box(
+        rounded_box_except_top(
             B_OUTER_WIDTH,
             B_OUTER_LENGTH,
             B_OUTER_HEIGHT - FUDGE,
@@ -160,6 +172,15 @@ def bottom():
         ),
     ]
 
+    detents = [
+        s.translate(x,
+                    B_INNER_LENGTH / 2,
+                    B_INNER_HEIGHT - RETENTION_TAB_HEIGHT)(
+          s.cylinder(RETENTION_TAB_DEPTH*2, RETENTION_TAB_WIDTH, RETENTION_TAB_HEIGHT, center=True)
+        )
+        for x in (0, B_INNER_WIDTH)
+    ]
+
     return s.difference()(
         s.union()(b_outer),
         # Nobles, centered under the tier 1 card stack.
@@ -191,7 +212,9 @@ def bottom():
                 center=False,
             )
         ),
+        *detents,
     )
+
 
 def cover():
     """The top of the box, with a lip to hold the lid in place."""
@@ -205,7 +228,12 @@ def cover():
                 BOX_RADIUS,
             )
         ),
-        rounded_box_except_top(B_OUTER_WIDTH, B_OUTER_LENGTH, B_OUTER_HEIGHT + FUDGE, BOX_RADIUS)
+        rounded_box_except_top(
+            B_OUTER_WIDTH, B_OUTER_LENGTH, B_OUTER_HEIGHT + FUDGE, BOX_RADIUS
+        ),
+    )
+
+
     )
 
 

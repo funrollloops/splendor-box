@@ -25,7 +25,11 @@ MODELS := \
 	master_box \
 	master_lid \
 	artisanal_bottom \
-	artisanal_lid
+	artisanal_lid \
+	artisanal_cover \
+	artisanal_assembly
+
+
 
 SCAD_FILES := $(sort $(patsubst %, $(OUTPUT_DIR)/%.scad, $(MODELS)) $(wildcard $(OUTPUT_DIR)/*.scad))
 STL_FILES  := $(patsubst $(OUTPUT_DIR)/%.scad, $(OUTPUT_DIR)/%.stl, $(SCAD_FILES))
