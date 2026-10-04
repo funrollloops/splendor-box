@@ -43,6 +43,7 @@ GOLD_TOKENS_PER_STACK = 5
 GEM_STACK_COUNT = 5
 GOLD_STACK_COUNT = 1
 TOTAL_TOKEN_COUNT = 40
+TOKEN_RADIUS = TOKEN_DIAMETER / 2.0
 
 __all__ = [
     # Card specifications
@@ -66,6 +67,7 @@ __all__ = [
     "NOBLE_5_STACK_H",
     # Gem token specifications
     "TOKEN_DIAMETER",
+    "TOKEN_RADIUS",
     "TOKEN_THICKNESS",
     "GEM_STACK_H",
     "GOLD_STACK_H",

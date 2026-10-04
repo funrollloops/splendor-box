@@ -3,6 +3,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+import artisanal as art
 import splendor_box as sb
 import travel_box as tb
 import two_piece_travel as tpt
@@ -62,3 +63,8 @@ class TestSplendorBox(unittest.TestCase):
         self.assertIsNotNone(bottom)
         self.assertIsNotNone(lid)
         self.assertIsNotNone(assembly)
+
+    def test_artisanal_generation(self):
+        """Verify artisanal box bottom object generation."""
+        bottom = art.bottom()
+        self.assertIsNotNone(bottom)

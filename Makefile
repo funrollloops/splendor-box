@@ -5,24 +5,46 @@ OUTPUT_DIR := output
 SRC_DIR := src
 TESTS_DIR := tests
 
-# Target STLs
-SCAD_FILES := $(wildcard $(OUTPUT_DIR)/*.scad)
-STL_FILES := $(patsubst $(OUTPUT_DIR)/%.scad, $(OUTPUT_DIR)/%.stl, $(SCAD_FILES))
+# Python sources that generate SCAD files
+PYTHON_SRCS := main.py $(wildcard $(SRC_DIR)/*.py)
+
+# Models and target files
+MODELS := \
+	two_piece_bottom \
+	two_piece_lid \
+	two_piece_assembly \
+	travel_base \
+	travel_card_tray \
+	travel_lid \
+	travel_assembly \
+	card_tray_tier1 \
+	card_tray_tier2 \
+	card_tray_tier3 \
+	token_tray \
+	noble_tray \
+	master_box \
+	master_lid \
+	full_assembly \
+	artisanal_bottom
+
+SCAD_FILES := $(sort $(patsubst %, $(OUTPUT_DIR)/%.scad, $(MODELS)) $(wildcard $(OUTPUT_DIR)/*.scad))
+STL_FILES  := $(patsubst $(OUTPUT_DIR)/%.scad, $(OUTPUT_DIR)/%.stl, $(SCAD_FILES))
 
 all: scad stl
 
 # Generate OpenSCAD (.scad) files from SolidPython2 scripts
-scad:
+scad: $(SCAD_FILES)
+
+$(SCAD_FILES) &: $(PYTHON_SRCS)
 	uv run python main.py
 
-# Render STL files from OpenSCAD models
-stl: scad
-	@mkdir -p $(OUTPUT_DIR)
-	@for scad_file in $(OUTPUT_DIR)/*.scad; do \
-		stl_file="$${scad_file%.scad}.stl"; \
-		echo "Rendering $$scad_file -> $$stl_file"; \
-		openscad -o "$$stl_file" "$$scad_file"; \
-	done
+# Generic rule for scad -> stl
+%.stl: %.scad
+	openscad -o $@ $<
+
+# Render all STL files
+stl: $(STL_FILES)
+
 
 # Run unit tests
 test:

@@ -8,6 +8,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
+import artisanal as art
 import splendor_box as sb
 import travel_box as tb
 import two_piece_travel as tpt
@@ -41,6 +42,8 @@ def main():
         "master_box": sb.generate_master_box(),
         "master_lid": sb.generate_master_lid(),
         "full_assembly": sb.generate_full_assembly(),
+        # 4. Artisanal Box Models
+        "artisanal_bottom": art.bottom(),
     }
 
     for name, obj in models.items():
