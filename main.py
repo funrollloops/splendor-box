@@ -44,6 +44,7 @@ def main():
         "full_assembly": sb.generate_full_assembly(),
         # 4. Artisanal Box Models
         "artisanal_bottom": art.bottom(),
+        "artisanal_lid": art.lid(),
     }
 
     for name, obj in models.items():

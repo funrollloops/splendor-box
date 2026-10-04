@@ -7,6 +7,17 @@ except ImportError:
 
 CARD_RADIUS = d.CARD_CORNER_RADIUS
 FUDGE = 0.01  # Avoid co-planar surfaces
+WALL_THICKNESS = 1.5  # Thickness of the box walls
+B_INNER_WIDTH = max(d.CARD_WIDTH, d.NOBLE_WIDTH) + max(
+    d.CARD_WIDTH * 2, d.TOKEN_DIAMETER * 3
+)
+B_OUTER_WIDTH = B_INNER_WIDTH + WALL_THICKNESS * 2
+B_INNER_LENGTH = d.CARD_LENGTH
+B_OUTER_LENGTH = B_INNER_LENGTH + WALL_THICKNESS * 2
+B_INNER_HEIGHT = max(
+    d.TIER1_STACK_H + d.NOBLE_STACK_H, d.GEM_STACK_H + d.TIER2_STACK_H
+)
+B_OUTER_HEIGHT = B_INNER_HEIGHT + WALL_THICKNESS
 
 
 def rounded_rectangle(w, l, h, r):
@@ -91,26 +102,18 @@ def scoop(thickness, r):
     return s.rotate(-90, 0, 0)(s.cylinder(r=r, h=thickness + FUDGE))
 
 
-def bottom(wall_thickness=1.5):
+def bottom():
     """At the bottom of the box, nobles on the left and gems on the
     right. On the next layer up, the three stacks of cards."""
 
-    WT = wall_thickness
-
-    b_inner_width = max(d.CARD_WIDTH, d.NOBLE_WIDTH) + max(
-        d.CARD_WIDTH * 2, d.TOKEN_DIAMETER * 3
-    )
-    card_spacing = d.CARD_WIDTH + (b_inner_width - d.CARD_WIDTH * 3) / 2
-    b_inner_length = d.CARD_LENGTH
-    b_inner_height = max(
-        d.TIER1_STACK_H + d.NOBLE_STACK_H, d.GEM_STACK_H + d.TIER2_STACK_H
-    )
+    WT = WALL_THICKNESS
+    card_spacing = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
 
     b_outer = s.translate([-WT, -WT, -WT])(
         rounded_box_except_top(
-            b_inner_width + WT * 2,
-            b_inner_length + WT * 2,
-            b_inner_height + WT - FUDGE,
+            B_OUTER_WIDTH,
+            B_OUTER_LENGTH,
+            B_OUTER_HEIGHT - FUDGE,
             CARD_RADIUS,
         )
     )
@@ -123,21 +126,21 @@ def bottom(wall_thickness=1.5):
     noble_x_offset = (d.CARD_WIDTH - d.NOBLE_WIDTH) / 2
     noble_y_offset = (d.CARD_LENGTH - d.NOBLE_LENGTH) / 2
 
-    tier1_slot_height = b_inner_height - d.NOBLE_STACK_H
+    tier1_slot_height = B_INNER_HEIGHT - d.NOBLE_STACK_H
     assert tier1_slot_height >= d.TIER1_STACK_H
-    tier2_slot_height = b_inner_height - d.GEM_STACK_H
+    tier2_slot_height = B_INNER_HEIGHT - d.GEM_STACK_H
     assert tier2_slot_height >= d.TIER2_STACK_H
     assert tier2_slot_height >= d.TIER3_STACK_H
 
     card_scoops = [
-        s.translate([card_spacing * i + d.CARD_WIDTH / 2, y, b_inner_height])(
+        s.translate([card_spacing * i + d.CARD_WIDTH / 2, y, B_INNER_HEIGHT])(
             scoop(
                 WT + 2 * FUDGE,
                 (tier2_slot_height if i else tier1_slot_height) + 3,
             )
         )
         for i in range(3)
-        for y in (-WT - FUDGE, b_inner_length - FUDGE)
+        for y in (-WT - FUDGE, B_INNER_LENGTH - FUDGE)
     ]
 
     # Noble scoops, not used because gem scoops work for nobles too!
@@ -181,10 +184,25 @@ def bottom(wall_thickness=1.5):
         # Cutout for card dividers so gem stacks are not obstructed.
         s.translate([CARD_RADIUS, gem_y_offset, d.GEM_STACK_H])(
             s.cube(
-                b_inner_width - 2 * CARD_RADIUS,
-                b_inner_length - 2 * gem_y_offset,
+                B_INNER_WIDTH - 2 * CARD_RADIUS,
+                B_INNER_LENGTH - 2 * gem_y_offset,
                 tier2_slot_height,
                 center=False,
             )
         ),
+    )
+
+def lid():
+    """The top of the box, with a lip to hold the lid in place."""
+    WT = WALL_THICKNESS
+    return s.difference()(
+        s.translate([-WT, -WT, -WT])(
+            rounded_box(
+                B_OUTER_WIDTH + 2 * WT,
+                B_OUTER_LENGTH + 2 * WT,
+                B_OUTER_HEIGHT + WT,
+                CARD_RADIUS,
+            )
+        ),
+        s.cube(B_OUTER_WIDTH, B_OUTER_LENGTH, B_OUTER_HEIGHT + FUDGE)
     )

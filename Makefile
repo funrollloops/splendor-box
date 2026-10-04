@@ -24,8 +24,8 @@ MODELS := \
 	noble_tray \
 	master_box \
 	master_lid \
-	full_assembly \
-	artisanal_bottom
+	artisanal_bottom \
+	artisanal_lid
 
 SCAD_FILES := $(sort $(patsubst %, $(OUTPUT_DIR)/%.scad, $(MODELS)) $(wildcard $(OUTPUT_DIR)/*.scad))
 STL_FILES  := $(patsubst $(OUTPUT_DIR)/%.scad, $(OUTPUT_DIR)/%.stl, $(SCAD_FILES))
