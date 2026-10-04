@@ -185,7 +185,9 @@ def generate_bottom_frame():
     # 1a. Noble Bottom Cavity (up to NOBLE_SHELF_Z)
     noble_cavity_h = NOBLE_SHELF_Z - BASE_FLOOR_THICKNESS
     noble_cavity = translate([noble_x, noble_y, BASE_FLOOR_THICKNESS])(
-        rounded_box([noble_w, noble_l, noble_cavity_h + 0.1], r=CARD_CORNER_RADIUS)
+        rounded_box(
+            [noble_w, noble_l, noble_cavity_h + 0.1], r=CARD_CORNER_RADIUS
+        )
     )
     cuts.append(noble_cavity)
 
@@ -205,7 +207,11 @@ def generate_bottom_frame():
 
     # Front/Back Noble finger scoops
     noble_fb_scoop = translate(
-        [noble_x + noble_w / 2.0, outer_l / 2.0, BASE_FLOOR_THICKNESS + noble_scoop_r]
+        [
+            noble_x + noble_w / 2.0,
+            outer_l / 2.0,
+            BASE_FLOOR_THICKNESS + noble_scoop_r,
+        ]
     )(
         rotate([90, 0, 0])(
             linear_extrude(height=outer_l + 10, center=True)(noble_scoop_2d)
@@ -234,7 +240,11 @@ def generate_bottom_frame():
     )
     t1_scoop_cut = translate(
         [card1_x + card1_w / 2.0, outer_l / 2.0, NOBLE_SHELF_Z + t1_scoop_r]
-    )(rotate([90, 0, 0])(linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)))
+    )(
+        rotate([90, 0, 0])(
+            linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)
+        )
+    )
     cuts.append(t1_scoop_cut)
 
     # --------------------------------------------------------------------------
@@ -265,7 +275,9 @@ def generate_bottom_frame():
 
             # Bottom push hole under each token stack
             cuts.append(
-                translate([cx, cy, -2])(cylinder(r=10.0, h=BASE_FLOOR_THICKNESS + 4))
+                translate([cx, cy, -2])(
+                    cylinder(r=10.0, h=BASE_FLOOR_THICKNESS + 4)
+                )
             )
 
     # Four rectangular prisms to create space for fingers, laid out in a rectangle
@@ -317,20 +329,30 @@ def generate_bottom_frame():
 
     # Continuous upper cavity for all 3 decks above TOKEN_SHELF_Z (no thick divider wall)
     upper_card_bay = translate([card1_x, card1_y, TOKEN_SHELF_Z])(
-        rounded_box([upper_card_bay_w, card1_l, total_h + 10], r=CARD_CORNER_RADIUS)
+        rounded_box(
+            [upper_card_bay_w, card1_l, total_h + 10], r=CARD_CORNER_RADIUS
+        )
     )
     cuts.append(upper_card_bay)
 
     # Tier 2 rounded U-shaped finger scoops (front & back)
     t2_scoop_cut = translate(
         [t2_x + card2_w / 2.0, outer_l / 2.0, TOKEN_SHELF_Z + t1_scoop_r]
-    )(rotate([90, 0, 0])(linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)))
+    )(
+        rotate([90, 0, 0])(
+            linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)
+        )
+    )
     cuts.append(t2_scoop_cut)
 
     # Tier 3 rounded U-shaped finger scoops (front & back)
     t3_scoop_cut = translate(
         [t3_x + card2_w / 2.0, outer_l / 2.0, TOKEN_SHELF_Z + t1_scoop_r]
-    )(rotate([90, 0, 0])(linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)))
+    )(
+        rotate([90, 0, 0])(
+            linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)
+        )
+    )
     cuts.append(t3_scoop_cut)
 
     # --------------------------------------------------------------------------
@@ -365,26 +387,38 @@ def generate_bottom_frame():
         # Fillet between Tier 1 and Tier 2 (front wall & back wall)
         translate([x_fillet1, card1_y, fillet_z])(
             double_concave_fillet(
-                r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+                r=CARD_CORNER_RADIUS,
+                gap=card_gap,
+                depth=fillet_depth,
+                h=fillet_h,
             )
         )
         + translate([x_fillet1, card1_y + card1_l, fillet_z])(
             rotate([0, 0, 180])(
                 double_concave_fillet(
-                    r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+                    r=CARD_CORNER_RADIUS,
+                    gap=card_gap,
+                    depth=fillet_depth,
+                    h=fillet_h,
                 )
             )
         )
         # Fillet between Tier 2 and Tier 3 (front wall & back wall)
         + translate([x_fillet2, card1_y, fillet_z])(
             double_concave_fillet(
-                r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+                r=CARD_CORNER_RADIUS,
+                gap=card_gap,
+                depth=fillet_depth,
+                h=fillet_h,
             )
         )
         + translate([x_fillet2, card1_y + card1_l, fillet_z])(
             rotate([0, 0, 180])(
                 double_concave_fillet(
-                    r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+                    r=CARD_CORNER_RADIUS,
+                    gap=card_gap,
+                    depth=fillet_depth,
+                    h=fillet_h,
                 )
             )
         )
@@ -432,7 +466,9 @@ def generate_top_lid():
     tab_y = (lid_outer_l - tab_w) / 2.0
     tab_local_z = DETENT_Z + 1.0 - (tab_h / 2.0)
 
-    left_tab = translate([wall, tab_y, tab_local_z])(cube([tab_proj, tab_w, tab_h]))
+    left_tab = translate([wall, tab_y, tab_local_z])(
+        cube([tab_proj, tab_w, tab_h])
+    )
     right_tab = translate([lid_outer_w - wall - tab_proj, tab_y, tab_local_z])(
         cube([tab_proj, tab_w, tab_h])
     )
@@ -443,9 +479,9 @@ def generate_top_lid():
     pull_left = translate([-pull_tab_l, (lid_outer_l - pull_tab_w) / 2.0, 0])(
         rounded_box([pull_tab_l + wall, pull_tab_w, 7.0], r=1.5)
     )
-    pull_right = translate([lid_outer_w - wall, (lid_outer_l - pull_tab_w) / 2.0, 0])(
-        rounded_box([pull_tab_l + wall, pull_tab_w, 7.0], r=1.5)
-    )
+    pull_right = translate(
+        [lid_outer_w - wall, (lid_outer_l - pull_tab_w) / 2.0, 0]
+    )(rounded_box([pull_tab_l + wall, pull_tab_w, 7.0], r=1.5))
 
     # 5. Top embossed logo
     logo_text = linear_extrude(height=0.8)(
@@ -457,9 +493,9 @@ def generate_top_lid():
             valign="center",
         )
     )
-    logo_emboss = translate([lid_outer_w / 2.0, lid_outer_l / 2.0, total_lid_h])(
-        logo_text
-    )
+    logo_emboss = translate(
+        [lid_outer_w / 2.0, lid_outer_l / 2.0, total_lid_h]
+    )(logo_text)
 
     return (
         (lid_shell - cavity)

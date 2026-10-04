@@ -13,7 +13,9 @@ class TestSplendorBox(unittest.TestCase):
     def test_tray_layout_alignment(self):
         """Ensure top and bottom row module footprints match perfectly."""
         row1_w = sb.CARD_TRAY_OUTER_W * 3  # 3 Card Trays
-        row2_w = sb.TOKEN_TRAY_OUTER_W + sb.NOBLE_TRAY_OUTER_W  # Token + Noble Tray
+        row2_w = (
+            sb.TOKEN_TRAY_OUTER_W + sb.NOBLE_TRAY_OUTER_W
+        )  # Token + Noble Tray
         self.assertEqual(row1_w, row2_w)
 
     def test_master_box_dimensions(self):

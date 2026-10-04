@@ -113,7 +113,9 @@ CARD_TRAY_OUTER_L = 92.5
 NOBLE_TRAY_OUTER_W = 67.5
 NOBLE_TRAY_OUTER_L = 92.5
 
-TOKEN_TRAY_OUTER_W = 135.0  # 2 * 67.5 = 135.0 mm (fits exactly next to Noble Tray!)
+TOKEN_TRAY_OUTER_W = (
+    135.0  # 2 * 67.5 = 135.0 mm (fits exactly next to Noble Tray!)
+)
 TOKEN_TRAY_OUTER_L = 92.5
 
 # Master Box Internal Cavity Dimensions
@@ -164,7 +166,8 @@ def rounded_slot_2d(w, l):
     r = w / 2.0
     half_l = max(0.001, (l - w) / 2.0)
     return hull()(
-        translate([0, -half_l])(circle(r=r)) + translate([0, half_l])(circle(r=r))
+        translate([0, -half_l])(circle(r=r))
+        + translate([0, half_l])(circle(r=r))
     )
 
 
@@ -249,7 +252,9 @@ def generate_card_tray(tier_num, stack_height):
         )
     )
     # Emboss inside card cavity floor
-    marker_emboss = translate([outer_w / 2.0, cavity_y + 12.0, floor_h])(marker_text)
+    marker_emboss = translate([outer_w / 2.0, cavity_y + 12.0, floor_h])(
+        marker_text
+    )
 
     # Front face engraved text
     front_text = linear_extrude(height=0.8)(
@@ -323,15 +328,21 @@ def generate_token_tray():
             cuts.append(channel_cut)
 
             # 3. Bottom finger push hole
-            push_hole = translate([cx, cy, -1])(cylinder(r=9.0, h=well_floor_z + 2))
+            push_hole = translate([cx, cy, -1])(
+                cylinder(r=9.0, h=well_floor_z + 2)
+            )
             cuts.append(push_hole)
 
             # 4. Chamfer / scoop inside well floor for smooth sliding single tokens out
             ramp_scoop = translate([cx, cy, well_floor_z + 2.0])(
-                rotate([0, 90, 0])(cylinder(r=well_r - 2.0, h=channel_w, center=True))
+                rotate([0, 90, 0])(
+                    cylinder(r=well_r - 2.0, h=channel_w, center=True)
+                )
             )
             # We subtract a sphere at bottom center for thumb scoop
-            thumb_scoop = translate([cx, cy, well_floor_z + well_r])(sphere(r=well_r))
+            thumb_scoop = translate([cx, cy, well_floor_z + well_r])(
+                sphere(r=well_r)
+            )
             # Add subtle floor scoop
             cuts.append(thumb_scoop)
 
@@ -394,7 +405,9 @@ def generate_noble_tray():
     left_cutout = translate([-5, cavity_y + noble_l / 2.0, floor_h + side_r])(
         rotate([0, 90, 0])(
             linear_extrude(height=outer_w + 10)(
-                hull()(circle(r=side_r) + translate([total_h, 0])(circle(r=side_r)))
+                hull()(
+                    circle(r=side_r) + translate([total_h, 0])(circle(r=side_r))
+                )
             )
         )
     )
@@ -513,7 +526,11 @@ def generate_master_lid():
     rim_l = inner_l - 0.4
 
     rim_outer = translate(
-        [(outer_w + 0.8 - rim_w) / 2.0, (outer_l + 0.8 - rim_l) / 2.0, lid_top_h]
+        [
+            (outer_w + 0.8 - rim_w) / 2.0,
+            (outer_l + 0.8 - rim_l) / 2.0,
+            lid_top_h,
+        ]
     )(rounded_box([rim_w, rim_l, rim_h], r=2.0))
     rim_inner = translate(
         [
@@ -521,7 +538,11 @@ def generate_master_lid():
             (outer_l + 0.8 - rim_l) / 2.0 + rim_wall,
             lid_top_h - 0.1,
         ]
-    )(rounded_box([rim_w - 2 * rim_wall, rim_l - 2 * rim_wall, rim_h + 1], r=1.5))
+    )(
+        rounded_box(
+            [rim_w - 2 * rim_wall, rim_l - 2 * rim_wall, rim_h + 1], r=1.5
+        )
+    )
 
     alignment_rim = rim_outer - rim_inner
 
@@ -545,7 +566,9 @@ def generate_master_lid():
         )
     )
 
-    top_title = translate([outer_w / 2.0, outer_l / 2.0 + 8, lid_top_h])(title_text)
+    top_title = translate([outer_w / 2.0, outer_l / 2.0 + 8, lid_top_h])(
+        title_text
+    )
     top_sub = translate([outer_w / 2.0, outer_l / 2.0 - 8, lid_top_h])(sub_text)
 
     # Gem diamond icon
@@ -590,8 +613,18 @@ def generate_full_assembly():
     # Row 2 (Front row): Token Tray + Noble Tray
     row2_y = base_y
     placed_tokens = translate([base_x, row2_y, base_z])(tokens)
-    placed_nobles = translate([base_x + TOKEN_TRAY_OUTER_W, row2_y, base_z])(nobles)
+    placed_nobles = translate([base_x + TOKEN_TRAY_OUTER_W, row2_y, base_z])(
+        nobles
+    )
 
     lid = translate([0, 0, MASTER_OUTER_H + 15.0])(generate_master_lid())
 
-    return box + placed_t1 + placed_t2 + placed_t3 + placed_tokens + placed_nobles + lid
+    return (
+        box
+        + placed_t1
+        + placed_t2
+        + placed_t3
+        + placed_tokens
+        + placed_nobles
+        + lid
+    )

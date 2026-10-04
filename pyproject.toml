@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [tool.ruff]
-line-length = 88
+line-length = 80
 target-version = "py312"
 
 [tool.ruff.format]

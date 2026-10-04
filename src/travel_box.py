@@ -164,18 +164,22 @@ def generate_lower_base():
             w_floor_z = total_h - w_depth
 
             # Well cylinder
-            cuts.append(translate([cx, cy, w_floor_z])(cylinder(r=well_r, h=total_h)))
+            cuts.append(
+                translate([cx, cy, w_floor_z])(cylinder(r=well_r, h=total_h))
+            )
 
             # Finger channels (front/back)
             chan_w = 18.0
             cuts.append(
-                translate([cx - chan_w / 2.0, cy - well_r - 4, w_floor_z + 1.0])(
-                    cube([chan_w, well_d + 8, total_h])
-                )
+                translate(
+                    [cx - chan_w / 2.0, cy - well_r - 4, w_floor_z + 1.0]
+                )(cube([chan_w, well_d + 8, total_h]))
             )
 
             # Bottom push hole
-            cuts.append(translate([cx, cy, -1])(cylinder(r=9.0, h=w_floor_z + 2)))
+            cuts.append(
+                translate([cx, cy, -1])(cylinder(r=9.0, h=w_floor_z + 2))
+            )
 
     # 2. NOBLE TILE WELLS (2 stacks of 5 tiles: 60x60mm each)
     noble_w = NOBLE_WIDTH + NOBLE_CLEARANCE
@@ -199,7 +203,9 @@ def generate_lower_base():
 
     # Bottom push slot for noble tiles
     cuts.append(
-        translate([noble_x, outer_l / 2.0, -1])(cylinder(r=12.0, h=noble_floor_z + 2))
+        translate([noble_x, outer_l / 2.0, -1])(
+            cylinder(r=12.0, h=noble_floor_z + 2)
+        )
     )
 
     # 3. EXTERIOR SNAP DETENT GROOVES (Left and Right short end exterior walls only!)
@@ -282,14 +288,17 @@ def generate_card_tray():
         push_slot = translate([cx, cy, -1])(
             linear_extrude(height=floor_z + 2)(
                 hull()(
-                    translate([0, -15])(circle(r=9)) + translate([0, 15])(circle(r=9))
+                    translate([0, -15])(circle(r=9))
+                    + translate([0, 15])(circle(r=9))
                 )
             )
         )
         cuts.append(push_slot)
 
         # 4. Embossed Tier numeral in cavity floor
-        tier_roman = "I" if tier_num == 1 else ("II" if tier_num == 2 else "III")
+        tier_roman = (
+            "I" if tier_num == 1 else ("II" if tier_num == 2 else "III")
+        )
         marker = linear_extrude(height=0.8)(
             text(
                 tier_roman,
@@ -357,7 +366,9 @@ def generate_travel_lid():
     # So tab_center_local_z = 22.3 - 20.1 = 2.2mm above skirt bottom (z=0)!
     tab_local_z = 2.2 - (tab_h / 2.0)  # ~1.1mm above bottom edge
 
-    left_tab = translate([wall, tab_y, tab_local_z])(cube([tab_proj, tab_w, tab_h]))
+    left_tab = translate([wall, tab_y, tab_local_z])(
+        cube([tab_proj, tab_w, tab_h])
+    )
     right_tab = translate([lid_outer_w - wall - tab_proj, tab_y, tab_local_z])(
         cube([tab_proj, tab_w, tab_h])
     )
@@ -368,9 +379,9 @@ def generate_travel_lid():
     pull_left = translate([-pull_tab_l, (lid_outer_l - pull_tab_w) / 2.0, 0])(
         rounded_box([pull_tab_l + wall, pull_tab_w, 6.0], r=1.5)
     )
-    pull_right = translate([lid_outer_w - wall, (lid_outer_l - pull_tab_w) / 2.0, 0])(
-        rounded_box([pull_tab_l + wall, pull_tab_w, 6.0], r=1.5)
-    )
+    pull_right = translate(
+        [lid_outer_w - wall, (lid_outer_l - pull_tab_w) / 2.0, 0]
+    )(rounded_box([pull_tab_l + wall, pull_tab_w, 6.0], r=1.5))
 
     # 5. Top embossed logo (on outer top plate Z=total_lid_h)
     logo_text = linear_extrude(height=0.8)(
@@ -382,9 +393,9 @@ def generate_travel_lid():
             valign="center",
         )
     )
-    logo_emboss = translate([lid_outer_w / 2.0, lid_outer_l / 2.0, total_lid_h])(
-        logo_text
-    )
+    logo_emboss = translate(
+        [lid_outer_w / 2.0, lid_outer_l / 2.0, total_lid_h]
+    )(logo_text)
 
     return (
         (lid_shell - cavity)
