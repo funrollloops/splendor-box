@@ -29,6 +29,7 @@ from solid2 import (
     difference,
     intersection,
     polygon,
+    square,
     scad_render_to_file,
     set_global_fn,
 )
@@ -203,10 +204,19 @@ def generate_card_tray(tier_num, stack_height):
         linear_extrude(height=floor_h + 2)(bottom_slot_2d)
     )
 
-    # Front scoop / window cutout
+    # Front scoop / window cutout (rounded U-shape)
     front_scoop_w = 32.0
-    front_scoop = translate([(outer_w - front_scoop_w) / 2.0, -5, floor_h + 4.0])(
-        cube([front_scoop_w, cavity_y + 10, total_h])
+    front_scoop_r = front_scoop_w / 2.0
+    front_scoop_2d = hull()(
+        circle(r=front_scoop_r)
+        + translate([-front_scoop_r, 0])(square([front_scoop_w, total_h + 10]))
+    )
+    front_scoop = translate(
+        [outer_w / 2.0, cavity_y / 2.0, floor_h + front_scoop_r + 2.0]
+    )(
+        rotate([90, 0, 0])(
+            linear_extrude(height=cavity_y + 10, center=True)(front_scoop_2d)
+        )
     )
 
     # Embossed Tier Marker

@@ -1,30 +1,36 @@
-# Splendor Board Game Component Storage Box & Organizer
+# Splendor Board Game Component Storage & Travel Box System
 
-A fully parametric 3D printable storage box and organizer system for **Splendor**, designed using **SolidPython2**.
+A fully parametric 3D printable storage box, tabletop organizer, and ultra-compact travel case system for **Splendor**, designed using **SolidPython2**.
 
 ---
 
-## Features & Highlights
+## 2-Piece Ultra-Compact Travel Solution ([`src/two_piece_travel.py`](file:///home/sagarm/p/splendor-box/src/two_piece_travel.py))
 
-- **Modular Independent Deck Trays**:
-  - **Tier 1 Card Tray**: Holds 40 Tier 1 cards (13.8 mm stack height).
-  - **Tier 2 Card Tray**: Holds 30 Tier 2 cards (10.2 mm stack height).
-  - **Tier 3 Card Tray**: Holds 20 Tier 3 cards (6.9 mm stack height).
-  - *Each stack can be lifted out separately* during setup and placed directly on the play table!
-  - Features dual side finger scoops, bottom finger push slots, front deck art windows, and embossed Roman numerals (`I`, `II`, `III`).
+Designed for maximum space efficiency, lightweight material usage, and zero rubber bands. Consists of **exactly 2 printable parts**:
 
-- **Gem Token Tray**:
-  - Houses 6 token wells (5 gem stacks of 7 tokens @ 23.5 mm height + 1 gold stack of 5 tokens @ 16.7 mm height).
-  - *Full-depth side finger channels* on both sides of every single stack allow players to pinch and pull out any token stack independently.
-  - Bottom push holes for effortless stack lifting.
+1. **Bottom Skeletal Tray ([`output/two_piece_bottom.stl`](file:///home/sagarm/p/splendor-box/output/two_piece_bottom.stl))**:
+   - **Noble Layer (Bottom Left)**: Stores 10 Noble tiles (60x60mm x 16.62mm height) at the bottom.
+   - **Tier 1 Card Shelf (Top Left)**: Tier 1 deck (40 cards, 13.8mm) sits directly on top of the Noble tiles.
+   - **Gem Token Layer (Bottom Right)**: 6 token stacks arranged in a 2x3 grid with open skeleton retaining posts for maximum finger clearance.
+   - **Tier 2 & 3 Card Shelves (Top Right)**: Tier 2 deck (30 cards) and Tier 3 deck (20 cards) sit directly on top of the gem token stacks.
+   - **Rounded U-shaped Finger Scoops**: Generous finger cutouts on all 3 card decks and token stacks.
 
-- **Noble Tile Tray**:
-  - Holds 10 Noble tiles (60 x 60 mm x 16.62 mm stack height) with side finger access.
-  - Includes an integrated utility pocket for the First Player marker or expansion tokens.
+2. **Top Enclosing Lid ([`output/two_piece_lid.stl`](file:///home/sagarm/p/splendor-box/output/two_piece_lid.stl))**:
+   - Encloses the loaded skeletal tray completely, holding cards, tokens, and noble tiles flush in place.
+   - Integrated side snap tabs click into exterior base detents to lock the box securely without rubber bands.
 
-- **Master Storage Box & Fitted Lid**:
-  - Accommodates all 5 removable module trays (3 Card Trays, 1 Token Tray, 1 Noble Tray) in a compact 208 mm x 191 mm x 26.5 mm footprint.
-  - Keeps all components securely locked in place during transport or vertical shelf storage.
+---
+
+## Systems & Features
+
+### 1. Two-Piece Travel Case ([`src/two_piece_travel.py`](file:///home/sagarm/p/splendor-box/src/two_piece_travel.py))
+*Footprint: ~202 x 92 x 36 mm. 2 parts total.*
+
+### 2. Multi-Tray Travel Case ([`src/travel_box.py`](file:///home/sagarm/p/splendor-box/src/travel_box.py))
+*Footprint: ~199 x 92 x 43 mm. 3 parts total.*
+
+### 3. Full Tabletop Organizer System ([`src/splendor_box.py`](file:///home/sagarm/p/splendor-box/src/splendor_box.py))
+*Footprint: ~208 x 191 x 26.5 mm. 7 parts total.*
 
 ---
 
@@ -32,77 +38,33 @@ A fully parametric 3D printable storage box and organizer system for **Splendor*
 
 | Component | Quantity | Dimensions per piece | Stack Height | Clearance |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tier 1 Cards** | 40 | 63 mm W x 88 mm L x 0.35 mm | 13.8 mm | 1.5 mm W / L |
-| **Tier 2 Cards** | 30 | 63 mm W x 88 mm L x 0.35 mm | 10.2 mm | 1.5 mm W / L |
-| **Tier 3 Cards** | 20 | 63 mm W x 88 mm L x 0.35 mm | 6.9 mm | 1.5 mm W / L |
-| **Noble Tiles** | 10 | 60 mm W x 60 mm L x 1.70 mm | 16.62 mm | 1.5 mm W / L |
+| **Tier 1 Cards** | 40 | 63 mm W x 88 mm L x 0.35 mm | 13.8 mm | 1.4 mm W / L |
+| **Tier 2 Cards** | 30 | 63 mm W x 88 mm L x 0.35 mm | 10.2 mm | 1.4 mm W / L |
+| **Tier 3 Cards** | 20 | 63 mm W x 88 mm L x 0.35 mm | 6.9 mm | 1.4 mm W / L |
+| **Noble Tiles** | 10 | 60 mm W x 60 mm L x 1.70 mm | 16.62 mm | 1.4 mm W / L |
 | **Gem Tokens** | 35 (5 x 7) | 43 mm Diameter x 3.3 mm | 23.50 mm | 1.2 mm Diameter |
 | **Gold Tokens** | 5 | 43 mm Diameter x 3.3 mm | 16.70 mm | 1.2 mm Diameter |
 
 ---
 
-## Parameterized SolidPython2 Variables
+## Makefile Commands
 
-All parameters are located in [`src/splendor_box.py`](file:///home/sagarm/p/splendor-box/src/splendor_box.py):
-
-```python
-# Card Specifications
-CARD_WIDTH = 63.0
-CARD_LENGTH = 88.0
-CARD_CORNER_RADIUS = 3.5
-
-# Stack Heights
-TIER1_STACK_H = 13.8
-TIER2_STACK_H = 10.2
-TIER3_STACK_H = 6.9
-
-# Gem Tokens
-TOKEN_DIAMETER = 43.0
-GEM_STACK_H = 23.50
-GOLD_STACK_H = 16.70
-
-# Noble Tiles
-NOBLE_WIDTH = 60.0
-NOBLE_LENGTH = 60.0
-NOBLE_STACK_H = 16.62
-
-# Clearances & Tolerances
-CARD_CLEARANCE_W = 1.5
-CARD_CLEARANCE_L = 1.5
-TOKEN_CLEARANCE_D = 1.2
-TRAY_FIT_TOLERANCE = 0.4
-```
-
----
-
-## Usage Instructions
-
-### 1. Generating OpenSCAD Files
-Run `main.py` using Python / `uv`:
 ```bash
-uv run python main.py
+# Build everything (.scad scripts + .stl 3D models)
+make all
+
+# Render OpenSCAD (.scad) scripts
+make scad
+
+# Compile .stl 3D printable files
+make stl
+
+# Run unit test suite
+make test
+
+# Format Python files with Ruff
+make format
+
+# Clean output build directory
+make clean
 ```
-This generates all `.scad` files in the `output/` directory:
-- [`output/card_tray_tier1.scad`](file:///home/sagarm/p/splendor-box/output/card_tray_tier1.scad)
-- [`output/card_tray_tier2.scad`](file:///home/sagarm/p/splendor-box/output/card_tray_tier2.scad)
-- [`output/card_tray_tier3.scad`](file:///home/sagarm/p/splendor-box/output/card_tray_tier3.scad)
-- [`output/token_tray.scad`](file:///home/sagarm/p/splendor-box/output/token_tray.scad)
-- [`output/noble_tray.scad`](file:///home/sagarm/p/splendor-box/output/noble_tray.scad)
-- [`output/master_box.scad`](file:///home/sagarm/p/splendor-box/output/master_box.scad)
-- [`output/master_lid.scad`](file:///home/sagarm/p/splendor-box/output/master_lid.scad)
-- [`output/full_assembly.scad`](file:///home/sagarm/p/splendor-box/output/full_assembly.scad)
-
-### 2. Running Unit Tests
-```bash
-uv run python -m unittest discover -s tests
-```
-
----
-
-## Recommended 3D Printing Settings
-
-- **Layer Height**: 0.2 mm (or 0.16 mm for fine embossed text)
-- **Infill**: 15% - 20% (Gyroid or Grid)
-- **Wall Loops**: 3 walls (1.2 mm wall thickness)
-- **Supports**: None required! All angles and bridges are designed overhang-free.
-- **Material**: PLA or PETG

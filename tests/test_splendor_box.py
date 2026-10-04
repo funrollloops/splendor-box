@@ -4,6 +4,8 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 import splendor_box as sb
+import travel_box as tb
+import two_piece_travel as tpt
 
 
 class TestSplendorBox(unittest.TestCase):
@@ -50,3 +52,23 @@ class TestSplendorBox(unittest.TestCase):
         self.assertIsNotNone(nobles)
         self.assertIsNotNone(box)
         self.assertIsNotNone(lid)
+
+    def test_travel_box_generation(self):
+        """Verify ultra-compact travel case solidpython objects."""
+        base = tb.generate_lower_base()
+        cards = tb.generate_card_tray()
+        lid = tb.generate_travel_lid()
+        assembly = tb.generate_travel_assembly()
+        self.assertIsNotNone(base)
+        self.assertIsNotNone(cards)
+        self.assertIsNotNone(lid)
+        self.assertIsNotNone(assembly)
+
+    def test_two_piece_travel_generation(self):
+        """Verify two-piece travel box solidpython objects."""
+        bottom = tpt.generate_bottom_frame()
+        lid = tpt.generate_top_lid()
+        assembly = tpt.generate_two_piece_assembly()
+        self.assertIsNotNone(bottom)
+        self.assertIsNotNone(lid)
+        self.assertIsNotNone(assembly)

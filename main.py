@@ -1,15 +1,16 @@
 """
-Main entry point to generate OpenSCAD (.scad) and STL files
-for the Splendor Storage Box system using solidpython2.
+Main entry script to generate OpenSCAD (.scad) and STL files for:
+1. Two-Piece Ultra-Compact Splendor Travel Case (Bottom Frame + Top Lid)
+2. Full Modular Splendor Desktop Organizer System
 """
 
 import os
 import sys
-import subprocess
 
-# Ensure src/ directory is on Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 import splendor_box as sb
+import travel_box as tb
+import two_piece_travel as tpt
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 
@@ -17,11 +18,21 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     print("==================================================")
-    print("   SPLENDOR COMPONENT STORAGE BOX GENERATOR       ")
+    print("   SPLENDOR STORAGE & TRAVEL BOX GENERATOR       ")
     print("==================================================")
     print(f"Output directory: {OUTPUT_DIR}\n")
 
     models = {
+        # 1. Two-Piece Ultra-Compact Travel Case (Primary 2-piece design)
+        "two_piece_bottom": tpt.generate_bottom_frame(),
+        "two_piece_lid": tpt.generate_top_lid(),
+        "two_piece_assembly": tpt.generate_two_piece_assembly(),
+        # 2. Travel Box Models
+        "travel_base": tb.generate_lower_base(),
+        "travel_card_tray": tb.generate_card_tray(),
+        "travel_lid": tb.generate_travel_lid(),
+        "travel_assembly": tb.generate_travel_assembly(),
+        # 3. Full Modular Desktop Box Models
         "card_tray_tier1": sb.generate_card_tray(1, sb.TIER1_STACK_H),
         "card_tray_tier2": sb.generate_card_tray(2, sb.TIER2_STACK_H),
         "card_tray_tier3": sb.generate_card_tray(3, sb.TIER3_STACK_H),
