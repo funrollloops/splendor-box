@@ -7,7 +7,7 @@ except ImportError:
 
 CARD_RADIUS = d.CARD_CORNER_RADIUS
 FUDGE = 0.01  # Avoid co-planar surfaces
-WALL_THICKNESS = 1.5  # Thickness of the box walls
+WALL_THICKNESS = 2  # Thickness of the box walls
 B_INNER_WIDTH = max(d.CARD_WIDTH, d.NOBLE_WIDTH) + max(
     d.CARD_WIDTH * 2, d.TOKEN_DIAMETER * 3
 )
@@ -20,6 +20,8 @@ B_INNER_HEIGHT = max(
 B_OUTER_HEIGHT = B_INNER_HEIGHT + WALL_THICKNESS
 BOX_RADIUS = WALL_THICKNESS  # CARD_RADIUS
 
+CARD_SPACING = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
+
 LEFT_VERTICAL_CLEARANCE = B_INNER_HEIGHT - d.NOBLE_STACK_H - d.TIER1_STACK_H
 RIGHT_VERTICAL_CLEARANCE = B_INNER_HEIGHT - d.GEM_STACK_H - d.TIER2_STACK_H
 
@@ -28,13 +30,33 @@ RETENTION_TAB_HEIGHT = 2.0
 RETENTION_TAB_DEPTH = 0.7
 RETENTION_TAB_OFFSET_FROM_TOP = 3.0  # To center
 
-assert LEFT_VERTICAL_CLEARANCE >= RETENTION_TAB_HEIGHT/2 + RETENTION_TAB_OFFSET_FROM_TOP, f"Left vertical clearance ({LEFT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
-assert RIGHT_VERTICAL_CLEARANCE >= RETENTION_TAB_HEIGHT/2 + RETENTION_TAB_OFFSET_FROM_TOP, f"Right vertical clearance ({RIGHT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
+RETENTION_TAB_X_POS = [
+    CARD_SPACING * x - (CARD_SPACING - d.CARD_WIDTH) / 2 for x in (1, 2)
+]
+RETENTION_TAB_DIAMETER = CARD_SPACING - d.CARD_WIDTH
+RETENTION_TAB_Y_POS = RETENTION_TAB_DIAMETER - RETENTION_TAB_DEPTH
+
+"""
+assert (
+    LEFT_VERTICAL_CLEARANCE
+    >= RETENTION_TAB_HEIGHT / 2 + RETENTION_TAB_OFFSET_FROM_TOP
+), (
+    f"Left vertical clearance ({LEFT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
+)
+assert (
+    RIGHT_VERTICAL_CLEARANCE
+    >= RETENTION_TAB_HEIGHT / 2 + RETENTION_TAB_OFFSET_FROM_TOP
+), (
+    f"Right vertical clearance ({RIGHT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
+)
+"""
 
 
 def rounded_rectangle(w, l, h, r):
     """Create a rounded rectangle with the given width, length, a height of 1, and corner radius at (0, 0)."""
-    assert min(w, h, l) > 2 * r, f"Dimensions too small for corner radius: w={w}, l={l}, h={h}, r={r}"
+    assert min(w, l) > 2 * r, (
+        f"Dimensions too small for corner radius: w={w}, l={l}, h={h}, r={r}"
+    )
     return s.hull()(
         s.translate([r, r, 0])(s.cylinder(r=r, h=h)),
         s.translate([w - r, r, 0])(s.cylinder(r=r, h=h)),
@@ -89,12 +111,60 @@ def card_stack(h):
 
 def rounded_box_except_top(w, l, h, r):
     """Create a rounded box with the given width, length, height, and corner radius at (0, 0)."""
-    corner = s.union()(s.sphere(r=r), s.cylinder(r=r, h=h - r))
+    assert min(w, l) >= 2 * r, (
+        f"Dimensions too small for corner radius: w={w}, l={l}, h={h}, r={r}"
+    )
+    assert h >= r
+    corner = s.union()(
+        s.intersection()(
+            s.translateZ(-r / 2)(s.cube(2 * r, 2 * r, r, center=True)),
+            s.sphere(r=r),
+        ),
+        s.cylinder(r=r, h=h - r),
+    )
     return s.hull()(
         s.translate([r, r, r])(corner),
         s.translate([w - r, r, r])(corner),
         s.translate([w - r, l - r, r])(corner),
         s.translate([r, l - r, r])(corner),
+    )
+
+
+def mirror_xy(arg):
+    """Mirrors twice (making four copies) around the center of the box"""
+    # Translate (B_INNER_WIDTH / 2, B_INNER_HEIGHT / 2) to (0, 0)
+    arg_y = (
+        s.translateY(B_INNER_LENGTH / 2)(
+            s.mirrorY()(s.translateY(-B_INNER_LENGTH / 2)(arg))
+        ),
+        arg,
+    )
+    return s.union()(
+        s.translateX(B_INNER_WIDTH / 2)(
+            s.mirrorX()(s.translateX(-B_INNER_WIDTH / 2)(*arg_y))
+        ),
+        *arg_y,
+    )
+
+
+def retention_tabs():
+    D = RETENTION_TAB_DIAMETER
+    XPOS = d.CARD_WIDTH + (CARD_SPACING - d.CARD_WIDTH) / 2
+    YPOS = D - RETENTION_TAB_DEPTH
+    return mirror_xy(
+        s.translate([XPOS, YPOS, 0])(
+            s.translateZ(RETENTION_TAB_OFFSET_FROM_TOP)(s.sphere(d=D)),
+            s.intersection()(
+                s.cylinder(d=D, h=RETENTION_TAB_OFFSET_FROM_TOP),
+                s.translateX(-D / 2 - FUDGE)(
+                    s.cube(
+                        D + 2 * FUDGE,
+                        D / 2 + FUDGE,
+                        RETENTION_TAB_OFFSET_FROM_TOP + FUDGE,
+                    )
+                ),
+            ),
+        )
     )
 
 
@@ -120,7 +190,6 @@ def bottom():
     right. On the next layer up, the three stacks of cards."""
 
     WT = WALL_THICKNESS
-    card_spacing = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
 
     b_outer = s.translate([-WT, -WT, -WT])(
         rounded_box_except_top(
@@ -146,7 +215,7 @@ def bottom():
     assert tier2_slot_height >= d.TIER3_STACK_H
 
     card_scoops = [
-        s.translate([card_spacing * i + d.CARD_WIDTH / 2, y, B_INNER_HEIGHT])(
+        s.translate([CARD_SPACING * i + d.CARD_WIDTH / 2, y, B_INNER_HEIGHT])(
             scoop(
                 WT + 2 * FUDGE,
                 (tier2_slot_height if i else tier1_slot_height) + 3,
@@ -172,14 +241,7 @@ def bottom():
         ),
     ]
 
-    detents = [
-        s.translate(x,
-                    B_INNER_LENGTH / 2,
-                    B_INNER_HEIGHT - RETENTION_TAB_HEIGHT)(
-          s.cylinder(RETENTION_TAB_DEPTH*2, RETENTION_TAB_WIDTH, RETENTION_TAB_HEIGHT, center=True)
-        )
-        for x in (0, B_INNER_WIDTH)
-    ]
+    detents = s.translateZ(B_INNER_HEIGHT)(s.mirrorZ()(retention_tabs()))
 
     return s.difference()(
         s.union()(b_outer),
@@ -196,10 +258,10 @@ def bottom():
         s.translate([d.CARD_WIDTH, gem_y_offset, 0])(tokens(d.GEM_STACK_H)),
         # Card slots.
         s.translate([0, 0, d.NOBLE_STACK_H])(card_stack(tier1_slot_height)),
-        s.translate([card_spacing, 0, d.GEM_STACK_H])(
+        s.translate([CARD_SPACING, 0, d.GEM_STACK_H])(
             card_stack(tier2_slot_height)
         ),
-        s.translate([card_spacing * 2, 0, d.GEM_STACK_H])(
+        s.translate([CARD_SPACING * 2, 0, d.GEM_STACK_H])(
             card_stack(tier2_slot_height)
         ),
         *card_scoops,
@@ -212,7 +274,7 @@ def bottom():
                 center=False,
             )
         ),
-        *detents,
+        detents,
     )
 
 
@@ -234,10 +296,29 @@ def cover():
     )
 
 
+def lid():
+    """Rather than a full-height cover, this is a shallow lid that
+    locks into the box with tabs."""
+    WT = WALL_THICKNESS
+    return s.union()(
+        s.translate([-WT, -WT, -WT])(
+            rounded_box_except_top(
+                B_OUTER_WIDTH, B_OUTER_LENGTH, WALL_THICKNESS, BOX_RADIUS
+            )
+        ),
+        # 1mm thick card stack for alignment, for tier 1 and 3.
+        card_stack(1),
+        s.translateX(B_INNER_WIDTH - d.CARD_WIDTH)(card_stack(1)),
+        retention_tabs(),
     )
 
 
-def lid():
-  """Rather than a full-height cover, this is a shallow lid that
-  locks into the box with tabs."""
-  pass
+def assembly():
+    """The full assembly of the box, with the cover on top."""
+    WT = WALL_THICKNESS
+    b = s.translate(WT, WT, WT)(bottom())
+    t = cover()  # Upside down, with the contents expected at (0, 0)
+    t = s.translate(0, 0, B_OUTER_HEIGHT)(s.mirror([0, 0, 1])(t))
+    return s.union()(
+        b, t, s.translate(0, B_OUTER_LENGTH * 2, 0)(s.intersection()(b, t))
+    )
