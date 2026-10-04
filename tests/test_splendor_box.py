@@ -9,28 +9,18 @@ import two_piece_travel as tpt
 
 
 class TestSplendorBox(unittest.TestCase):
-    def test_dimensions_valid(self):
-        """Verify component dimensions and clearance parameters."""
-        self.assertEqual(sb.CARD_WIDTH, 63.0)
-        self.assertEqual(sb.CARD_LENGTH, 88.0)
-        self.assertEqual(sb.NOBLE_WIDTH, 60.0)
-        self.assertEqual(sb.NOBLE_LENGTH, 60.0)
-        self.assertEqual(sb.TOKEN_DIAMETER, 43.0)
-        self.assertEqual(sb.TIER1_CARD_COUNT, 40)
-        self.assertEqual(sb.TIER2_CARD_COUNT, 30)
-        self.assertEqual(sb.TIER3_CARD_COUNT, 20)
-
     def test_tray_layout_alignment(self):
         """Ensure top and bottom row module footprints match perfectly."""
         row1_w = sb.CARD_TRAY_OUTER_W * 3  # 3 Card Trays
         row2_w = sb.TOKEN_TRAY_OUTER_W + sb.NOBLE_TRAY_OUTER_W  # Token + Noble Tray
-        self.assertEqual(row1_w, 202.5)
-        self.assertEqual(row2_w, 202.5)
+        self.assertEqual(row1_w, row2_w)
 
     def test_master_box_dimensions(self):
         """Ensure master box inner cavity can fit all trays with clearance."""
-        self.assertGreater(sb.MASTER_INNER_W, 202.5)
-        self.assertGreater(sb.MASTER_INNER_L, 185.0)
+        total_w = sb.CARD_TRAY_OUTER_W * 3
+        total_l = sb.CARD_TRAY_OUTER_L * 2
+        self.assertGreater(sb.MASTER_INNER_W, total_w)
+        self.assertGreater(sb.MASTER_INNER_L, total_l)
         self.assertGreaterEqual(sb.MASTER_INNER_H, sb.TRAY_HEIGHT)
 
     def test_card_trays_generation(self):

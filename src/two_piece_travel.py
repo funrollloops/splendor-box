@@ -5,10 +5,10 @@ Modeled using SolidPython2 with fully parametric variables.
 Features:
 - Exactly 2 printable parts: Bottom Skeletal Tray + Top Enclosing Lid.
 - Bottom Layer:
-  - 10 Noble Tiles (60x60mm x 16.62mm) at the bottom left.
+  - 10 Noble Tiles (60x60mm x 16.62mm) at the bottom left with dedicated front, back, and side finger cutouts.
   - 6 Token Stacks (5 gem @ 23.5mm, 1 gold @ 16.7mm) at the bottom right.
 - Top Layer:
-  - Tier 1 Cards (40 cards, 13.8mm) stacked ON TOP of the Noble tiles.
+  - Tier 1 Cards (40 cards, 13.8mm) stacked ON TOP of the Noble tiles (resting on the Tier 1 shelf at Z = NOBLE_SHELF_Z).
   - Tier 2 Cards (30 cards, 10.2mm) & Tier 3 Cards (20 cards, 6.9mm) stacked ON TOP of the Gem tokens.
 - Minimal skeleton frame with maximum finger accessibility around tokens, nobles, and decks.
 - Perimeter snap latch lid locks everything securely for travel without rubber bands.
@@ -40,24 +40,37 @@ set_global_fn(64)
 # PARAMETERS & PARAMETRIC VARIABLES
 # ==============================================================================
 
-# Card Specifications
-CARD_WIDTH = 63.0
-CARD_LENGTH = 88.0
-CARD_CORNER_RADIUS = 3.5
-
-TIER1_STACK_H = 13.8
-TIER2_STACK_H = 10.2
-TIER3_STACK_H = 6.9
-
-# Noble Tile Specifications (10 tiles)
-NOBLE_WIDTH = 60.0
-NOBLE_LENGTH = 60.0
-NOBLE_STACK_H = 16.62
-
-# Gem Token Specifications (6 stacks)
-TOKEN_DIAMETER = 43.0
-GEM_STACK_H = 23.50  # 7 tokens
-GOLD_STACK_H = 16.70  # 5 tokens
+# Shared Item Dimensions (Imported from dimensions.py)
+try:
+    from dimensions import (
+        CARD_CORNER_RADIUS,
+        CARD_LENGTH,
+        CARD_WIDTH,
+        GEM_STACK_H,
+        GOLD_STACK_H,
+        NOBLE_LENGTH,
+        NOBLE_STACK_H,
+        NOBLE_WIDTH,
+        TIER1_STACK_H,
+        TIER2_STACK_H,
+        TIER3_STACK_H,
+        TOKEN_DIAMETER,
+    )
+except ImportError:
+    from .dimensions import (
+        CARD_CORNER_RADIUS,
+        CARD_LENGTH,
+        CARD_WIDTH,
+        GEM_STACK_H,
+        GOLD_STACK_H,
+        NOBLE_LENGTH,
+        NOBLE_STACK_H,
+        NOBLE_WIDTH,
+        TIER1_STACK_H,
+        TIER2_STACK_H,
+        TIER3_STACK_H,
+        TOKEN_DIAMETER,
+    )
 
 # Clearances & Tolerances
 CARD_CLEARANCE_W = 1.4
@@ -131,17 +144,15 @@ def rounded_box(size, r, center=False):
 def generate_bottom_frame():
     """
     Creates the open skeletal frame holding:
-    - Bottom Left: 10 Noble Tiles (60x60mm)
-    - Top Left (above Nobles): Tier 1 Cards (40 cards)
-    - Bottom Right: 6 Gem Token Stacks (2x3 grid)
-    - Top Right (above Tokens): Tier 2 Cards & Tier 3 Cards side-by-side
-    - Large finger cutouts everywhere with skeleton trusses for maximum material efficiency.
+    - Bottom Left: 10 Noble Tiles (60x60mm) with front, back, and side finger cutouts
+    - Top Left (above Nobles): Tier 1 Cards (40 cards) resting on NOBLE_SHELF_Z
+    - Bottom Right: 6 Gem Token Stacks (2x3 grid) from Z = BASE_FLOOR_THICKNESS to TOKEN_SHELF_Z
+    - Top Right (above Tokens): Tier 2 & Tier 3 Cards resting on TOKEN_SHELF_Z
     """
     outer_w = TOTAL_OUTER_W
     outer_l = TOTAL_OUTER_L
     total_h = FRAME_MAX_H
 
-    # Outer perimeter skeleton box
     outer_shell = rounded_box([outer_w, outer_l, total_h], r=3.5)
 
     cuts = []
@@ -155,38 +166,49 @@ def generate_bottom_frame():
     noble_x = FRAME_WALL + (LEFT_SECTION_W - noble_w) / 2.0
     noble_y = FRAME_WALL + (SECTION_L - noble_l) / 2.0
 
-    # Noble bottom cavity
+    # 1a. Noble Bottom Cavity (up to NOBLE_SHELF_Z)
+    noble_cavity_h = NOBLE_SHELF_Z - BASE_FLOOR_THICKNESS
     noble_cavity = translate([noble_x, noble_y, BASE_FLOOR_THICKNESS])(
-        rounded_box([noble_w, noble_l, NOBLE_SHELF_Z], r=CARD_CORNER_RADIUS)
+        rounded_box([noble_w, noble_l, noble_cavity_h + 0.1], r=CARD_CORNER_RADIUS)
     )
     cuts.append(noble_cavity)
 
-    # Noble finger cutouts (front & back and side)
-    noble_finger_y = translate([noble_x + 12, -5, BASE_FLOOR_THICKNESS + 2])(
-        cube([noble_w - 24, outer_l + 10, NOBLE_SHELF_Z])
-    )
-    noble_finger_x = translate([-5, noble_y + 12, BASE_FLOOR_THICKNESS + 2])(
-        cube([LEFT_SECTION_W + 10, noble_l - 24, NOBLE_SHELF_Z])
-    )
+    # Noble bottom finger push hole
     noble_bottom_hole = translate(
-        [noble_x + noble_w / 2.0, noble_y + noble_l / 2.0, -1]
-    )(cylinder(r=15.0, h=BASE_FLOOR_THICKNESS + 2))
-    cuts.append(noble_finger_y)
-    cuts.append(noble_finger_x)
+        [noble_x + noble_w / 2.0, noble_y + noble_l / 2.0, -2]
+    )(cylinder(r=15.0, h=BASE_FLOOR_THICKNESS + 4))
     cuts.append(noble_bottom_hole)
 
-    # Tier 1 Card Deck Well (above Nobles)
+    # Dedicated Noble Side Finger Cutouts (front/back and left outer wall)
+    noble_scoop_w = 26.0
+    noble_scoop_r = noble_scoop_w / 2.0
+    noble_scoop_2d = hull()(
+        circle(r=noble_scoop_r)
+        + translate([-noble_scoop_r, 0])(square([noble_scoop_w, total_h + 10]))
+    )
+
+    # Front/Back Noble finger scoops
+    noble_fb_scoop = translate(
+        [noble_x + noble_w / 2.0, outer_l / 2.0, BASE_FLOOR_THICKNESS + noble_scoop_r]
+    )(
+        rotate([90, 0, 0])(
+            linear_extrude(height=outer_l + 10, center=True)(noble_scoop_2d)
+        )
+    )
+    cuts.append(noble_fb_scoop)
+
+    # 1b. Tier 1 Card Deck Well (resting on NOBLE_SHELF_Z above Nobles)
     card1_w = CARD_WIDTH + CARD_CLEARANCE_W
     card1_l = CARD_LENGTH + CARD_CLEARANCE_L
     card1_x = FRAME_WALL + (LEFT_SECTION_W - card1_w) / 2.0
     card1_y = FRAME_WALL + (SECTION_L - card1_l) / 2.0
 
     card1_cavity = translate([card1_x, card1_y, NOBLE_SHELF_Z])(
-        rounded_box([card1_w, card1_l, total_h + 5], r=CARD_CORNER_RADIUS)
+        rounded_box([card1_w, card1_l, total_h + 10], r=CARD_CORNER_RADIUS)
     )
     cuts.append(card1_cavity)
 
-    # Tier 1 rounded U-shaped finger scoops (front & back)
+    # Tier 1 card deck U-shaped finger scoops (front & back)
     t1_scoop_w = 28.0
     t1_scoop_r = t1_scoop_w / 2.0
     t1_scoop_2d = hull()(
@@ -210,67 +232,57 @@ def generate_bottom_frame():
     token_start_x = right_x_start + well_r + 0.6
     token_start_y = FRAME_WALL + well_r + (SECTION_L - 2 * well_d) / 2.0
 
+    # 2a. 6 Token Wells (from BASE_FLOOR_THICKNESS up to TOKEN_SHELF_Z)
     for col in range(3):
         cx = token_start_x + col * col_spacing
         for row in range(2):
             cy = token_start_y + row * row_spacing
 
-            is_gold = col == 2 and row == 1
-            stack_h = GOLD_STACK_H if is_gold else GEM_STACK_H
             w_floor_z = BASE_FLOOR_THICKNESS
 
             # Main token cylinder cutout
             cuts.append(
-                translate([cx, cy, w_floor_z])(cylinder(r=well_r, h=TOKEN_SHELF_Z + 5))
+                translate([cx, cy, w_floor_z])(
+                    cylinder(r=well_r, h=TOKEN_SHELF_Z - w_floor_z + 0.1)
+                )
             )
 
-            # Full skeleton side cutouts around tokens for maximum finger room
+            # Skeleton side channels around tokens for finger room
             chan_w = 20.0
             cuts.append(
-                translate([cx - chan_w / 2.0, cy - well_r - 4, w_floor_z + 1.0])(
-                    cube([chan_w, well_d + 8, TOKEN_SHELF_Z])
+                translate([cx - chan_w / 2.0, cy - well_r - 2, w_floor_z + 1.0])(
+                    cube([chan_w, well_d + 4, TOKEN_SHELF_Z - w_floor_z])
                 )
             )
 
             # Bottom push hole under each token stack
             cuts.append(
-                translate([cx, cy, -1])(cylinder(r=10.0, h=BASE_FLOOR_THICKNESS + 2))
+                translate([cx, cy, -2])(cylinder(r=10.0, h=BASE_FLOOR_THICKNESS + 4))
             )
 
-    # Tier 2 & Tier 3 Card Deck Wells (above Tokens)
+    # 2b. Tier 2 & Tier 3 Card Bay (resting on TOKEN_SHELF_Z above Tokens)
     card2_w = CARD_WIDTH + CARD_CLEARANCE_W
     card2_l = CARD_LENGTH + CARD_CLEARANCE_L
 
-    # Tier 2 Deck sits over Token Columns 0 & 1
     t2_x = right_x_start + 1.0
     t2_y = FRAME_WALL + (SECTION_L - card2_l) / 2.0
 
-    card2_cavity = translate([t2_x, t2_y, TOKEN_SHELF_Z])(
-        rounded_box([card2_w, card2_l, total_h + 5], r=CARD_CORNER_RADIUS)
+    right_card_bay_w = RIGHT_SECTION_W - 2.0
+    right_card_bay = translate([t2_x, t2_y, TOKEN_SHELF_Z])(
+        rounded_box([right_card_bay_w, card2_l, total_h + 10], r=CARD_CORNER_RADIUS)
     )
-    cuts.append(card2_cavity)
+    cuts.append(right_card_bay)
 
-    # Tier 2 rounded U-shaped finger scoops
+    # Tier 2 rounded U-shaped finger scoops (front & back)
     t2_scoop_cut = translate(
         [t2_x + card2_w / 2.0, outer_l / 2.0, TOKEN_SHELF_Z + t1_scoop_r]
     )(rotate([90, 0, 0])(linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)))
     cuts.append(t2_scoop_cut)
 
-    # Tier 3 Deck sits over Token Column 2
-    t3_x = t2_x + card2_w + FRAME_WALL
-    t3_y = t2_y
-    t3_floor_z = TOKEN_SHELF_Z + (
-        TIER2_STACK_H - TIER3_STACK_H
-    )  # Raised so top aligns with Tier 2!
-
-    card3_cavity = translate([t3_x, t3_y, t3_floor_z])(
-        rounded_box([card2_w, card2_l, total_h + 5], r=CARD_CORNER_RADIUS)
-    )
-    cuts.append(card3_cavity)
-
-    # Tier 3 rounded U-shaped finger scoops
+    # Tier 3 rounded U-shaped finger scoops (front & back)
+    t3_x = t2_x + card2_w + 1.5
     t3_scoop_cut = translate(
-        [t3_x + card2_w / 2.0, outer_l / 2.0, t3_floor_z + t1_scoop_r]
+        [t3_x + card2_w / 2.0, outer_l / 2.0, TOKEN_SHELF_Z + t1_scoop_r]
     )(rotate([90, 0, 0])(linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)))
     cuts.append(t3_scoop_cut)
 
@@ -279,21 +291,21 @@ def generate_bottom_frame():
     # --------------------------------------------------------------------------
     detent_y = (outer_l - DETENT_WIDTH) / 2.0
 
-    left_groove = translate([-0.1, detent_y, DETENT_Z])(
-        cube([DETENT_DEPTH + 0.1, DETENT_WIDTH, DETENT_HEIGHT])
+    left_groove = translate([-0.2, detent_y, DETENT_Z])(
+        cube([DETENT_DEPTH + 0.2, DETENT_WIDTH, DETENT_HEIGHT])
     )
     right_groove = translate([outer_w - DETENT_DEPTH, detent_y, DETENT_Z])(
-        cube([DETENT_DEPTH + 0.1, DETENT_WIDTH, DETENT_HEIGHT])
+        cube([DETENT_DEPTH + 0.2, DETENT_WIDTH, DETENT_HEIGHT])
     )
     cuts.append(left_groove)
     cuts.append(right_groove)
 
-    # Subtract all cuts from outer perimeter shell
-    tray_cuts = cuts[0]
+    # Union all cuts into a single clean CSG object before difference
+    all_cuts = cuts[0]
     for c in cuts[1:]:
-        tray_cuts += c
+        all_cuts = all_cuts + c
 
-    return outer_shell - tray_cuts
+    return outer_shell - all_cuts
 
 
 # ==============================================================================
@@ -324,7 +336,7 @@ def generate_top_lid():
 
     # 2. Hollow cavity inside skirt
     cavity = translate([wall, wall, -1])(
-        rounded_box([lid_inner_w, lid_inner_l, skirt_depth + 1], r=3.0)
+        rounded_box([lid_inner_w, lid_inner_l, skirt_depth + 1.1], r=3.0)
     )
 
     # 3. Inward Snap Tabs (positioned near bottom skirt rim Z=0!)

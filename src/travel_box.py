@@ -35,24 +35,37 @@ set_global_fn(64)
 # PARAMETERS & PARAMETRIC VARIABLES
 # ==============================================================================
 
-# Card Specifications
-CARD_WIDTH = 63.0
-CARD_LENGTH = 88.0
-CARD_CORNER_RADIUS = 3.5
-
-TIER1_STACK_H = 13.8
-TIER2_STACK_H = 10.2
-TIER3_STACK_H = 6.9
-
-# Noble Tile Specifications (Stored in 2 stacks of 5 tiles)
-NOBLE_WIDTH = 60.0
-NOBLE_LENGTH = 60.0
-NOBLE_5_STACK_H = 8.5
-
-# Gem Token Specifications (6 stacks)
-TOKEN_DIAMETER = 43.0
-GEM_STACK_H = 23.5  # 7 tokens
-GOLD_STACK_H = 16.7  # 5 tokens
+# Shared Item Dimensions (Imported from dimensions.py)
+try:
+    from dimensions import (
+        CARD_CORNER_RADIUS,
+        CARD_LENGTH,
+        CARD_WIDTH,
+        GEM_STACK_H,
+        GOLD_STACK_H,
+        NOBLE_5_STACK_H,
+        NOBLE_LENGTH,
+        NOBLE_WIDTH,
+        TIER1_STACK_H,
+        TIER2_STACK_H,
+        TIER3_STACK_H,
+        TOKEN_DIAMETER,
+    )
+except ImportError:
+    from .dimensions import (
+        CARD_CORNER_RADIUS,
+        CARD_LENGTH,
+        CARD_WIDTH,
+        GEM_STACK_H,
+        GOLD_STACK_H,
+        NOBLE_5_STACK_H,
+        NOBLE_LENGTH,
+        NOBLE_WIDTH,
+        TIER1_STACK_H,
+        TIER2_STACK_H,
+        TIER3_STACK_H,
+        TOKEN_DIAMETER,
+    )
 
 # Clearances & Tolerances
 CARD_CLEARANCE_W = 1.4
