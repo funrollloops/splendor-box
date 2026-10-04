@@ -16,37 +16,8 @@ B_INNER_HEIGHT = max(
 )
 B_OUTER_HEIGHT = B_INNER_HEIGHT + WALL_THICKNESS
 BOX_RADIUS = WALL_THICKNESS  # CARD_RADIUS
-
 CARD_SPACING = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
 
-LEFT_VERTICAL_CLEARANCE = B_INNER_HEIGHT - d.NOBLE_STACK_H - d.TIER1_STACK_H
-RIGHT_VERTICAL_CLEARANCE = B_INNER_HEIGHT - d.GEM_STACK_H - d.TIER2_STACK_H
-
-RETENTION_TAB_WIDTH = B_INNER_LENGTH / 3.0
-RETENTION_TAB_HEIGHT = 2.0
-RETENTION_TAB_DEPTH = 0.7
-RETENTION_TAB_OFFSET_FROM_TOP = 3.0  # To center
-
-RETENTION_TAB_X_POS = [
-    CARD_SPACING * x - (CARD_SPACING - d.CARD_WIDTH) / 2 for x in (1, 2)
-]
-RETENTION_TAB_DIAMETER = CARD_SPACING - d.CARD_WIDTH
-RETENTION_TAB_Y_POS = RETENTION_TAB_DIAMETER - RETENTION_TAB_DEPTH
-
-"""
-assert (
-    LEFT_VERTICAL_CLEARANCE
-    >= RETENTION_TAB_HEIGHT / 2 + RETENTION_TAB_OFFSET_FROM_TOP
-), (
-    f"Left vertical clearance ({LEFT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
-)
-assert (
-    RIGHT_VERTICAL_CLEARANCE
-    >= RETENTION_TAB_HEIGHT / 2 + RETENTION_TAB_OFFSET_FROM_TOP
-), (
-    f"Right vertical clearance ({RIGHT_VERTICAL_CLEARANCE}) is insufficient for retention tab height ({RETENTION_TAB_HEIGHT}) and offset ({RETENTION_TAB_OFFSET_FROM_TOP})."
-)
-"""
 
 
 def rounded_rectangle(w, l, h, r):
@@ -73,21 +44,6 @@ def tokens(h):
     ]
 
     cutout_ratio = 0.7
-    # Unused rectangle cutout; disc used instead cause it's cool.
-    rectangle_cutout = s.translate(
-        [
-            d.TOKEN_DIAMETER * (1 - cutout_ratio),
-            d.TOKEN_DIAMETER * (1 - cutout_ratio),
-            0,
-        ]
-    )(
-        s.cube(
-            d.TOKEN_DIAMETER * 2 * cutout_ratio + d.TOKEN_DIAMETER,
-            d.TOKEN_DIAMETER * 2 * cutout_ratio,
-            d.GEM_STACK_H + FUDGE,
-            center=False,
-        )
-    )
     disc_cutouts = s.union()(
         *(
             s.translate(x * d.TOKEN_DIAMETER, d.TOKEN_DIAMETER, 0)(
@@ -145,19 +101,21 @@ def mirror_xy(arg):
 
 
 def retention_tabs():
-    D = RETENTION_TAB_DIAMETER
+    D = CARD_SPACING - d.CARD_WIDTH
+    RETENTION_TAB_DEPTH = 0.7
     XPOS = d.CARD_WIDTH + (CARD_SPACING - d.CARD_WIDTH) / 2
     YPOS = D - RETENTION_TAB_DEPTH
+    ZPOS = 3.0
     return mirror_xy(
         s.translate([XPOS, YPOS, 0])(
-            s.translateZ(RETENTION_TAB_OFFSET_FROM_TOP)(s.sphere(d=D)),
+            s.translateZ(ZPOS)(s.sphere(d=D)),
             s.intersection()(
-                s.cylinder(d=D, h=RETENTION_TAB_OFFSET_FROM_TOP),
+                s.cylinder(d=D, h=ZPOS),
                 s.translateX(-D / 2 - FUDGE)(
                     s.cube(
                         D + 2 * FUDGE,
                         D / 2 + FUDGE,
-                        RETENTION_TAB_OFFSET_FROM_TOP + FUDGE,
+                        ZPOS + FUDGE,
                     )
                 ),
             ),
@@ -220,22 +178,6 @@ def bottom():
         )
         for i in range(3)
         for y in (-WT - FUDGE, B_INNER_LENGTH - FUDGE)
-    ]
-
-    # Noble scoops, not used because gem scoops work for nobles too!
-    noble_scoops = [
-        s.translate(d.CARD_WIDTH / 2, noble_y_offset, d.NOBLE_STACK_H)(
-            s.scale(d.NOBLE_STACK_H, noble_y_offset - WT, d.NOBLE_STACK_H)(
-                s.sphere()
-            )
-        ),
-        s.translate(
-            d.CARD_WIDTH / 2, noble_y_offset + d.NOBLE_LENGTH, d.NOBLE_STACK_H
-        )(
-            s.scale(d.NOBLE_STACK_H, noble_y_offset - WT, d.NOBLE_STACK_H)(
-                s.sphere()
-            )
-        ),
     ]
 
     detents = s.translateZ(B_INNER_HEIGHT)(s.mirrorZ()(retention_tabs()))
