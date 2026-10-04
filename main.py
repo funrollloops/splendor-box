@@ -19,7 +19,6 @@ BOX_RADIUS = WALL_THICKNESS  # CARD_RADIUS
 CARD_SPACING = d.CARD_WIDTH + (B_INNER_WIDTH - d.CARD_WIDTH * 3) / 2
 
 
-
 def rounded_rectangle(w, l, h, r):
     """Create a rounded rectangle with the given width, length, a height of 1, and corner radius at (0, 0)."""
     assert min(w, l) > 2 * r, (
@@ -137,7 +136,9 @@ def rounded_box(w, l, h, r):
 
 
 def scoop(thickness, r):
-    return s.rotate(-90, 0, 0)(s.cylinder(r=r, h=thickness + FUDGE))
+    return s.rotate(-90, 0, 0)(
+        s.translateZ(-FUDGE)(s.cylinder(r=r, h=thickness + FUDGE * 2))
+    )
 
 
 def bottom():
@@ -172,12 +173,12 @@ def bottom():
     card_scoops = [
         s.translate([CARD_SPACING * i + d.CARD_WIDTH / 2, y, B_INNER_HEIGHT])(
             scoop(
-                WT + 2 * FUDGE,
+                WT,
                 (tier2_slot_height if i else tier1_slot_height) + 3,
             )
         )
         for i in range(3)
-        for y in (-WT - FUDGE, B_INNER_LENGTH - FUDGE)
+        for y in (-WT, B_INNER_LENGTH)
     ]
 
     detents = s.translateZ(B_INNER_HEIGHT)(s.mirrorZ()(retention_tabs()))
@@ -264,11 +265,12 @@ def assembly():
 
 
 if __name__ == "__main__":
-  import os
-  import os.path
-  OUTDIR = os.path.join(os.path.join(os.path.dirname(__file__), "output"))
-  # make the directory in case it doesn't exist
-  os.makedirs(OUTDIR, exist_ok=True)
-  s.scad_render_to_file(bottom(), os.path.join(OUTDIR, 'bottom.scad'))
-  s.scad_render_to_file(cover(), os.path.join(OUTDIR, 'cover.scad'))
-  s.scad_render_to_file(lid(), os.path.join(OUTDIR, 'lid.scad'))
+    import os
+    import os.path
+
+    OUTDIR = os.path.join(os.path.join(os.path.dirname(__file__), "output"))
+    # make the directory in case it doesn't exist
+    os.makedirs(OUTDIR, exist_ok=True)
+    s.scad_render_to_file(bottom(), os.path.join(OUTDIR, "bottom.scad"))
+    s.scad_render_to_file(cover(), os.path.join(OUTDIR, "cover.scad"))
+    s.scad_render_to_file(lid(), os.path.join(OUTDIR, "lid.scad"))
