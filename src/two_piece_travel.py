@@ -136,6 +136,22 @@ def rounded_box(size, r, center=False):
     return res
 
 
+def double_concave_fillet(r, gap, depth, h):
+    """
+    Generates a 3D double-concave fillet separator that cradles
+    the rounded corners of two adjacent card stacks.
+    Base is along the wall (y=0) extending into +y.
+    """
+    x_c = gap / 2.0 + r
+    y_c = r
+    w_base = 2 * x_c + 0.2
+    base_block = translate([-w_base / 2.0, -0.2])(square([w_base, depth + 0.2]))
+    circle_left = translate([-x_c, y_c])(circle(r=r))
+    circle_right = translate([x_c, y_c])(circle(r=r))
+    profile_2d = base_block - (circle_left + circle_right)
+    return linear_extrude(height=h)(profile_2d)
+
+
 # ==============================================================================
 # PIECE 1: BOTTOM SKELETON FRAME & TRAY
 # ==============================================================================
@@ -197,16 +213,17 @@ def generate_bottom_frame():
     )
     cuts.append(noble_fb_scoop)
 
-    # 1b. Tier 1 Card Deck Well (resting on NOBLE_SHELF_Z above Nobles)
+    # 1b. Tier 1 Lower Card Cavity (resting on NOBLE_SHELF_Z above Nobles, up to TOKEN_SHELF_Z)
     card1_w = CARD_WIDTH + CARD_CLEARANCE_W
     card1_l = CARD_LENGTH + CARD_CLEARANCE_L
     card1_x = FRAME_WALL + (LEFT_SECTION_W - card1_w) / 2.0
     card1_y = FRAME_WALL + (SECTION_L - card1_l) / 2.0
 
-    card1_cavity = translate([card1_x, card1_y, NOBLE_SHELF_Z])(
-        rounded_box([card1_w, card1_l, total_h + 10], r=CARD_CORNER_RADIUS)
+    t1_lower_h = TOKEN_SHELF_Z - NOBLE_SHELF_Z + 0.1
+    card1_lower_cavity = translate([card1_x, card1_y, NOBLE_SHELF_Z])(
+        rounded_box([card1_w, card1_l, t1_lower_h], r=CARD_CORNER_RADIUS)
     )
-    cuts.append(card1_cavity)
+    cuts.append(card1_lower_cavity)
 
     # Tier 1 card deck U-shaped finger scoops (front & back)
     t1_scoop_w = 28.0
@@ -233,12 +250,11 @@ def generate_bottom_frame():
     token_start_y = FRAME_WALL + well_r + (SECTION_L - 2 * well_d) / 2.0
 
     # 2a. 6 Token Wells (from BASE_FLOOR_THICKNESS up to TOKEN_SHELF_Z)
+    w_floor_z = BASE_FLOOR_THICKNESS
     for col in range(3):
         cx = token_start_x + col * col_spacing
         for row in range(2):
             cy = token_start_y + row * row_spacing
-
-            w_floor_z = BASE_FLOOR_THICKNESS
 
             # Main token cylinder cutout
             cuts.append(
@@ -247,31 +263,63 @@ def generate_bottom_frame():
                 )
             )
 
-            # Skeleton side channels around tokens for finger room
-            chan_w = 20.0
-            cuts.append(
-                translate([cx - chan_w / 2.0, cy - well_r - 2, w_floor_z + 1.0])(
-                    cube([chan_w, well_d + 4, TOKEN_SHELF_Z - w_floor_z])
-                )
-            )
-
             # Bottom push hole under each token stack
             cuts.append(
                 translate([cx, cy, -2])(cylinder(r=10.0, h=BASE_FLOOR_THICKNESS + 4))
             )
 
-    # 2b. Tier 2 & Tier 3 Card Bay (resting on TOKEN_SHELF_Z above Tokens)
+    # Four rectangular prisms to create space for fingers, laid out in a rectangle
+    # with each corner at the center of one of a corner token stack (30mm wide cutouts).
+    cutout_w = 30.0
+    x_left = token_start_x
+    x_right = token_start_x + 2 * col_spacing
+    y_bottom = token_start_y
+    y_top = token_start_y + row_spacing
+    chan_z = w_floor_z + 1.0
+    chan_h = TOKEN_SHELF_Z - w_floor_z
+
+    # Bottom horizontal prism: from (x_left, y_bottom) to (x_right, y_bottom)
+    cuts.append(
+        translate([x_left, y_bottom - cutout_w / 2.0, chan_z])(
+            cube([x_right - x_left, cutout_w, chan_h])
+        )
+    )
+    # Top horizontal prism: from (x_left, y_top) to (x_right, y_top)
+    cuts.append(
+        translate([x_left, y_top - cutout_w / 2.0, chan_z])(
+            cube([x_right - x_left, cutout_w, chan_h])
+        )
+    )
+    # Left vertical prism: from (x_left, y_bottom) to (x_left, y_top)
+    cuts.append(
+        translate([x_left - cutout_w / 2.0, y_bottom, chan_z])(
+            cube([cutout_w, y_top - y_bottom, chan_h])
+        )
+    )
+    # Right vertical prism: from (x_right, y_bottom) to (x_right, y_top)
+    cuts.append(
+        translate([x_right - cutout_w / 2.0, y_bottom, chan_z])(
+            cube([cutout_w, y_top - y_bottom, chan_h])
+        )
+    )
+
+    # 2b. Continuous Card Bay across Tier 1, 2 & 3 (resting on TOKEN_SHELF_Z)
     card2_w = CARD_WIDTH + CARD_CLEARANCE_W
     card2_l = CARD_LENGTH + CARD_CLEARANCE_L
+    card_gap = 2.0
 
-    t2_x = right_x_start + 1.0
-    t2_y = FRAME_WALL + (SECTION_L - card2_l) / 2.0
+    t1_x = card1_x
+    t2_x = t1_x + card1_w + card_gap
+    t3_x = t2_x + card2_w + card_gap
 
-    right_card_bay_w = RIGHT_SECTION_W - 2.0
-    right_card_bay = translate([t2_x, t2_y, TOKEN_SHELF_Z])(
-        rounded_box([right_card_bay_w, card2_l, total_h + 10], r=CARD_CORNER_RADIUS)
+    right_end_x = t3_x + card2_w + 1.5
+    upper_card_bay_w = right_end_x - card1_x
+
+    # Continuous upper cavity for all 3 decks above TOKEN_SHELF_Z (no thick divider wall)
+    upper_card_bay = translate([card1_x, card1_y, TOKEN_SHELF_Z])(
+        rounded_box([upper_card_bay_w, card1_l, total_h + 10], r=CARD_CORNER_RADIUS)
     )
-    cuts.append(right_card_bay)
+    cuts.append(upper_card_bay)
 
     # Tier 2 rounded U-shaped finger scoops (front & back)
     t2_scoop_cut = translate(
@@ -280,7 +328,6 @@ def generate_bottom_frame():
     cuts.append(t2_scoop_cut)
 
     # Tier 3 rounded U-shaped finger scoops (front & back)
-    t3_x = t2_x + card2_w + 1.5
     t3_scoop_cut = translate(
         [t3_x + card2_w / 2.0, outer_l / 2.0, TOKEN_SHELF_Z + t1_scoop_r]
     )(rotate([90, 0, 0])(linear_extrude(height=outer_l + 10, center=True)(t1_scoop_2d)))
@@ -305,7 +352,45 @@ def generate_bottom_frame():
     for c in cuts[1:]:
         all_cuts = all_cuts + c
 
-    return outer_shell - all_cuts
+    # Double-concave fillet dividers between card stacks on front & back walls
+    # (between Tier 1 & 2, and between Tier 2 & 3)
+    x_fillet1 = t1_x + card1_w + card_gap / 2.0
+    x_fillet2 = t2_x + card2_w + card_gap / 2.0
+
+    fillet_z = TOKEN_SHELF_Z
+    fillet_h = total_h - fillet_z
+    fillet_depth = 3.0
+
+    fillets = (
+        # Fillet between Tier 1 and Tier 2 (front wall & back wall)
+        translate([x_fillet1, card1_y, fillet_z])(
+            double_concave_fillet(
+                r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+            )
+        )
+        + translate([x_fillet1, card1_y + card1_l, fillet_z])(
+            rotate([0, 0, 180])(
+                double_concave_fillet(
+                    r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+                )
+            )
+        )
+        # Fillet between Tier 2 and Tier 3 (front wall & back wall)
+        + translate([x_fillet2, card1_y, fillet_z])(
+            double_concave_fillet(
+                r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+            )
+        )
+        + translate([x_fillet2, card1_y + card1_l, fillet_z])(
+            rotate([0, 0, 180])(
+                double_concave_fillet(
+                    r=CARD_CORNER_RADIUS, gap=card_gap, depth=fillet_depth, h=fillet_h
+                )
+            )
+        )
+    )
+
+    return (outer_shell - all_cuts) + fillets
 
 
 # ==============================================================================
