@@ -5,8 +5,6 @@ try:
 except ImportError:
     from . import dimensions as d
 
-INNER_WIDTH = d.CARD_WIDTH * 3
-INNER_HEIGHT = d.CARD_LENGTH
 CARD_RADIUS = d.CARD_CORNER_RADIUS
 FUDGE = 0.01  # Avoid co-planar surfaces
 
@@ -14,10 +12,10 @@ FUDGE = 0.01  # Avoid co-planar surfaces
 def rounded_rectangle(w, l, h, r):
     """Create a rounded rectangle with the given width, length, a height of 1, and corner radius at (0, 0)."""
     return s.hull()(
-        s.translate([r, 0, 0])(s.cylinder(r=r, h=h)),
-        s.translate([w - r, 0, 0])(s.cylinder(r=r, h=h)),
-        s.translate([w - r, l, 0])(s.cylinder(r=r, h=h)),
-        s.translate([r, l, 0])(s.cylinder(r=r, h=h)),
+        s.translate([r, r, 0])(s.cylinder(r=r, h=h)),
+        s.translate([w - r, r, 0])(s.cylinder(r=r, h=h)),
+        s.translate([w - r, l - r, 0])(s.cylinder(r=r, h=h)),
+        s.translate([r, l - r, 0])(s.cylinder(r=r, h=h)),
     )
 
 
@@ -40,6 +38,17 @@ def card_stack(h):
     )
 
 
+def rounded_box_except_top(w, l, h, r):
+    """Create a rounded box with the given width, length, height, and corner radius at (0, 0)."""
+    corner = s.union()(s.sphere(r=r), s.cylinder(r=r, h=h - r))
+    return s.hull()(
+        s.translate([r, r, 0])(corner),
+        s.translate([w - r, r, 0])(corner),
+        s.translate([w - r, l - r, 0])(corner),
+        s.translate([r, l - r, 0])(corner),
+    )
+
+
 def bottom(wall_thickness=1.5):
     """At the bottom of the box, nobles on the left and gems on the
     right. On the next layer up, the three stacks of cards."""
@@ -56,7 +65,7 @@ def bottom(wall_thickness=1.5):
     )
 
     b_outer = s.translate([-WT, -WT, -WT])(
-        rounded_rectangle(
+        rounded_box_except_top(
             b_inner_width + WT * 2,
             b_inner_length + WT * 2,
             b_inner_height + WT - FUDGE,
@@ -94,7 +103,7 @@ def bottom(wall_thickness=1.5):
 
     return s.difference()(
         b_outer,
-        s.translate([0, (d.CARD_LENGTH - d.NOBLE_LENGTH) / 2, 0])(nobles),
+        s.translate([(d.CARD_WIDTH - d.NOBLE_LENGTH) / 2, (d.CARD_LENGTH - d.NOBLE_LENGTH) / 2, 0])(nobles),
         s.translate([d.CARD_WIDTH, gem_y_offset, 0])(
             tokens(d.GEM_STACK_H), token_cutout
         ),
